@@ -1,6 +1,7 @@
 #include "operations.h"
 #include "types.h"
 #include "utilities.h"
+#include <string.h>
 
 Database* createDatabase(const char *databaseName) {
     if (databaseName == NULL) {
@@ -155,15 +156,15 @@ void createTable(Database *db, const char *tableName) {
         currentFirstTable->node.prevOffset = newTable->node.offset;
 
         // Link newTable and currentFirstTable
-        newTable->node.nextNode = currentFirstTable;
-        currentFirstTable->node.prevNode = newTable;
+        newTable->node.nextNode = (Node *) currentFirstTable;
+        currentFirstTable->node.prevNode = (Node *) newTable;
 
         serializeTable(db, currentFirstTable);
     }
 
     // Update the database's firstTableOffset and link the new first table
     db->metadata.firstTableOffset = newTable->node.offset;
-    db->firstTable = newTable;
+    db->firstTable = (Node *) newTable;
 
     // Serialize the updated database metadata
     serializeDatabase(db);
@@ -212,8 +213,8 @@ void addColumn(Database *db, const char *tableName, ColumnMetadata columnMetadat
         currentFirstColumn->node.prevOffset = newColumn->node.offset;
 
         // Link newColumn and currentFirstColumn
-        newColumn->node.nextNode = currentFirstColumn;
-        currentFirstColumn->node.prevNode = newColumn;
+        newColumn->node.nextNode = (Node *) currentFirstColumn;
+        currentFirstColumn->node.prevNode = (Node *)newColumn;
 
         serializeColumn(db, currentFirstColumn);
     }
@@ -221,7 +222,7 @@ void addColumn(Database *db, const char *tableName, ColumnMetadata columnMetadat
     // Update the table's firstColumnOffset and increment the column count
     table->metadata.firstColumnOffset = newColumn->node.offset;
     table->metadata.columnCount++;
-    table->firstColumn = newColumn;
+    table->firstColumn = (Node *) newColumn;
 
     // Serialize the updated table metadata
     serializeTable(db, table);

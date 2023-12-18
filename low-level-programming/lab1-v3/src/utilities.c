@@ -1,4 +1,7 @@
 #include "utilities.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 Table* getFirstTable(Database *db) {
     if (db == NULL || db->dbConnection == NULL) {
@@ -18,7 +21,7 @@ Table* getFirstTable(Database *db) {
         return NULL;
     }
 
-    db->firstTable = firstTable;
+    db->firstTable = (Node *)firstTable;
 
     return firstTable;
 }
@@ -105,8 +108,8 @@ Row* addEmptyRow(Database *db, const char *tableName) {
         currentFirstRow->node.prevOffset = newRow->node.offset;
 
         // Link newRow and currentFirstRow
-        newRow->node.nextNode = currentFirstRow;
-        currentFirstRow->node.prevNode = newRow;
+        newRow->node.nextNode = (Node *) currentFirstRow;
+        currentFirstRow->node.prevNode = (Node *) newRow;
 
         serializeRow(db, currentFirstRow);
     }
@@ -114,7 +117,7 @@ Row* addEmptyRow(Database *db, const char *tableName) {
     // Update the table's firstRowOffset and increment the record count
     table->metadata.firstRowOffset = newRow->node.offset;
     table->metadata.recordCount++;
-    table->firstRow = newRow;
+    table->firstRow = (Node *) newRow;
 
     // Serialize the updated table metadata
     serializeTable(db, table);
@@ -176,8 +179,8 @@ Row* addData(Database *db, Row* row, Data *data) {
         currentFirstData->node.prevOffset = data->node.offset;
 
         // Link data and currentFirstData
-        data->node.nextNode = currentFirstData;
-        currentFirstData->node.prevNode = data;
+        data->node.nextNode = (Node *) currentFirstData;
+        currentFirstData->node.prevNode = (Node *)data;
 
         serializeData(db, currentFirstData);
     }
@@ -187,7 +190,7 @@ Row* addData(Database *db, Row* row, Data *data) {
 
     // Update the row's firstDataOffset and link the new data
     row->metadata.firstDataOffset = newData->node.offset;
-    row->firstData = newData;
+    row->firstData = (Node *)newData;
 
     // Serialize the updated row metadata
     serializeRow(db, row);

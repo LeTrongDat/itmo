@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "types.h"
 
 Database* openDatabase(const char *databaseName);

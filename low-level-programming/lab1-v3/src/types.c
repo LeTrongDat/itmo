@@ -1,4 +1,5 @@
 #include "types.h"
+#include <stdlib.h>
 
 void prependNode(Node *currentNode, Node *newNode) {
     newNode->nextNode = currentNode;

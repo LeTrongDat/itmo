@@ -16,6 +16,8 @@ typedef struct Name {
     char *value;
 } Name;
 
+typedef enum { STRING, BOOLEAN, INTEGER, FLOAT } DataType;
+
 typedef struct TableMetadata {
     Name tableName;
     int columnCount;
@@ -39,7 +41,7 @@ typedef struct DatabaseMetadata {
     long firstTableOffset;
 } DatabaseMetadata;
 
-typedef enum { STRING, BOOLEAN, INTEGER, FLOAT } DataType;
+
 
 typedef struct Data {
     Node node;
