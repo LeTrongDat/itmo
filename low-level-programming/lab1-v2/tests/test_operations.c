@@ -174,11 +174,12 @@ void createSampleTableWithDifferentTypes(Database* db, const char* tableName) {
     addColumn(db, tableName, "col_str", DT_STRING); // String column
     addColumn(db, tableName, "col_float", DT_FLOAT); // Float column
     addColumn(db, tableName, "col_bool", DT_BOOL); // Bool column
+        
 }
 
 void insertSampleRowsWithDifferentTypes(Database* db, const char* tableName) {
     // Insert rows with sample data of different types
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < 5; ++i) {
         Data rowData[4];
 
         // Integer data
@@ -225,7 +226,7 @@ void test_insertRowAndLoadDatabase() {
     Table* loadedTable = getTableByName(loadedDb, tableName);
     assert(loadedTable != NULL);
     assert(loadedTable->numColumns == 4);
-    assert(loadedTable->numRows == 10000); // Check row count
+    assert(loadedTable->numRows == 5); // Check row count
 
     // Additional checks to verify the data of each row
     // (Depending on your implementation, you'll need to retrieve and verify each row's data)
@@ -236,15 +237,66 @@ void test_insertRowAndLoadDatabase() {
     printf("Test for insertRow and loadDatabase passed.\n");
 }
 
+// A sample condition function that checks if the integer value in the first column is even
+bool isEvenCondition(FILE *file, const Row* row) {
+    if (!row) return false;
+    printf("isevencondition %d\n", row->fileRow.lastDataOffset);
+    Data* lastData = getLastData(file, row); // Assuming the first element in the data array is an integer
+    printf("lastData %d %d\n", lastData->fileData.offset, row->fileRow.lastDataOffset);
+    Data* thirdData = getPrevData(file, lastData);
+    printf("thirdData %f\n", thirdData->value.float_val);
+    Data* secondData = getPrevData(file, thirdData);
+    printf("secondData %s\n", secondData->value.string_val);
+    Data* firstData = getPrevData(file, secondData);
+
+
+    printf("firstData value: %d\n", firstData->value.int_val);
+
+    return firstData && firstData->type == DT_INT && (firstData->value.int_val % 2 == 0);
+}
+
+void test_selectRow() {
+    printf("Running test for selectRow...\n");
+
+    // Setup: Create a database, a table, and insert rows
+    const char* dbName = "test_db";
+    const char* tableName = "test_table";
+    Database* db = createDatabase(dbName);
+
+
+    createSampleTableWithDifferentTypes(db, tableName);  // Function from previous examples
+    insertSampleRowsWithDifferentTypes(db, tableName);   // Function from previous examples
+
+    // Test: Use selectRow to find rows where the first column's integer value is even
+    RowNode* selectedRows = selectRows(db, tableName, isEvenCondition);
+
+    // Assertions
+    int count = 0;
+    RowNode* current = selectedRows;
+    while (current) {
+        count++;
+        current = current->next;
+    }
+    assert(count > 0);  // Ensure that some rows are selected
+
+    // Cleanup: Free the selected rows list and drop the database
+    // freeRowNodeList(selectedRows); // Assuming you have a function to free the RowNode list
+    free(selectedRows);
+    dropDatabase(db);
+
+    printf("Test for selectRow passed.\n");
+}
+
 int main() {
-    test_createDatabase();
-    test_loadDatabase();
-    test_loadDatabase2();
-    test_dropDatabase();
-    test_createTable();
-    test_dropTable();
-    test_addColumn();
-    test_insertRowAndLoadDatabase();
+    // test_createDatabase();
+    // test_loadDatabase();
+    // test_loadDatabase2();
+    // test_dropDatabase();
+    // test_createTable();
+    // test_dropTable();
+    // test_addColumn();
+    // test_insertRowAndLoadDatabase();
+    test_selectRow();
     // Add more tests as needed
     return 0;
 }

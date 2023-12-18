@@ -85,6 +85,8 @@ Row* getLastRow(FILE *file, Table *table) {
     if (file && table->fileTable.lastRowOffset != 0) {
         Row* lastRow = malloc(sizeof(Row));
         if (!lastRow) return NULL;
+        if (lastRow->lastData) {
+        }
 
         fseek(file, table->fileTable.lastRowOffset, SEEK_SET);
         deserializeRow(file, lastRow);  // Assuming deserializeRow is implemented elsewhere

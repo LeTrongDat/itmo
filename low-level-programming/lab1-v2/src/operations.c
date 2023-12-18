@@ -26,7 +26,7 @@ Database* createDatabase(const char* name) {
     // Create and open a file for the database
     char filename[256];
     snprintf(filename, sizeof(filename), "%s", name);
-    FILE* file = fopen(filename, "wb");
+    FILE* file = fopen(filename, "w+");
     if (!file) {
         // File creation failed, cleanup and return NULL
         free(db);
@@ -298,8 +298,6 @@ void insertRow(Database* db, const char* tableName, Data* data) {
         return;
     }
 
-
-
     // Find the table by name
     Table* table = getTableByName(db, tableName);
     if (!table) {
@@ -325,6 +323,7 @@ void insertRow(Database* db, const char* tableName, Data* data) {
     row->fileRow.lastDataOffset = 0; // To be updated when data is inserted
 
     // Update the row list in the table
+    table->lastRow = getLastRow(file, table);
     if (table->lastRow) {
         table->lastRow->next = row;
         table->lastRow->fileRow.nextRowOffset = newRowOffset;
@@ -336,15 +335,12 @@ void insertRow(Database* db, const char* tableName, Data* data) {
     table->lastRow = row;
     table->numRows++;
 
-
     serializeRow(file, row);
     
 
     for(int i = 0; i < table->numColumns; i++) {
         insertDataIntoRow(file, row, &data[i]);
     }
-
-    
 
     // Update the table's lastRowOffset and serialize the updated table
     table->fileTable.lastRowOffset = newRowOffset;
@@ -357,21 +353,21 @@ void insertRow(Database* db, const char* tableName, Data* data) {
 
 // Function to select rows from a Table in a Database based on a condition
 RowNode* selectRows(Database* db, const char* tableName, ConditionFunc condition) {
+
     if (!db || !tableName || !condition) return NULL;
 
     // Open the database file
     FILE* file = fopen(db->databaseName, "r+");
     if (!file) {
-        // Handle file opening failure
-        // ...
         return NULL;
     }
 
     // Find the table by name
+
+    printf("pre getlastrow 1 %d\n", db->lastTable->lastRow->lastData->fileData.offset);
     Table* table = getTableByName(db, tableName);
+    printf("pre getlastrow 3 %d\n", table->lastRow->lastData->fileData.offset);
     if (!table) {
-        // Table not found, handle the error
-        // ...
         fclose(file);
         return NULL;
     }
@@ -379,9 +375,12 @@ RowNode* selectRows(Database* db, const char* tableName, ConditionFunc condition
     // Iterate over rows in the table and apply the condition function
     RowNode* head = NULL;
     RowNode* tail = NULL;
-    Row* currentRow = table->lastRow;
+    Row* currentRow = malloc(sizeof(Row));
+
+    currentRow = getLastRow(file, table);
     while (currentRow) {
-        if (condition(currentRow)) {
+        printf("curren row %d\n", currentRow->lastData->fileData.offset);
+        if (condition(file, currentRow)) {
             // Create a new RowNode for the matching row
             RowNode* newNode = malloc(sizeof(RowNode));
             if (!newNode) {
@@ -433,7 +432,7 @@ void updateRow(Database* db, const char* tableName, Data* newData, ConditionFunc
     // Iterate over rows in the table and apply the condition function
     Row* currentRow = table->lastRow;
     while (currentRow) {
-        if (condition(currentRow)) {
+        if (condition(db, currentRow)) {
             // Update the data in the row
             Data* currentData = currentRow->lastData;
             Data* newDataPtr = newData;
@@ -492,7 +491,7 @@ void deleteRow(Database* db, const char* tableName, ConditionFunc condition) {
     Row* prevRow = NULL;
 
     while (currentRow) {
-        if (condition(currentRow)) {
+        if (condition(db, currentRow)) {
             // Update the fileRow offsets for adjacent rows
             if (prevRow) {
                 prevRow->fileRow.nextRowOffset = currentRow->fileRow.nextRowOffset;

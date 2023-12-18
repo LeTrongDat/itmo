@@ -52,6 +52,8 @@ Table* getLastTable(Database *db) {
     if (db->fileDb.lastTableOffset != 0) {
         Table* lastTable = malloc(sizeof(Table));
         if (!lastTable) return NULL;
+        if (lastTable->lastRow) {
+        }
         fseek(file, db->fileDb.lastTableOffset, SEEK_SET);
         deserializeTable(file, lastTable);  // Assuming deserializeTable is implemented elsewhere
         db->lastTable = lastTable;
@@ -67,7 +69,10 @@ Table* getLastTable(Database *db) {
 Table* getTableByName(Database *db, const char *tableName) {
     if (!db || !tableName) return NULL;
 
-    FILE* file = fopen(db->databaseName, "rb+");
+    // printf("pre getlastrow %d\n", db->lastTable->fileTable.offset);
+    if (db->lastTable->lastRow) printf("pre getlastrow 2.1 %d\n", db->lastTable->lastRow->lastData->fileData.offset);
+    FILE* file = fopen(db->databaseName, "r+");
+
     if (!file) {
         // File creation failed, cleanup and return NULL
         free(db);
@@ -76,12 +81,18 @@ Table* getTableByName(Database *db, const char *tableName) {
 
     // Iterate through the linked list of tables to find the matching name
     Table* currentTable = getLastTable(db);  // Start from the last table
+
+    if (db->lastTable->lastRow) printf("pre getlastrow 2.2 %d\n", db->lastTable->lastRow->lastData->fileData.offset);
     while (currentTable) {
         if (strcmp(currentTable->tableName, tableName) == 0) {
+            fclose(file);
+
+            if (db->lastTable->lastRow) printf("pre getlastrow 2.3 %d\n", currentTable->lastRow->lastData->fileData.offset);
             return currentTable;
         }
         currentTable = getPrevTable(file, currentTable); // Move to the previous table
     }
+
 
     fclose(file);
 

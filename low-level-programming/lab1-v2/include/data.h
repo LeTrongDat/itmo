@@ -44,7 +44,7 @@ void deserializeData(FILE *file, Data *data);
 
 // Helper function prototypes for navigating through data nodes
 Data* getNextData(FILE *file, Data *currentData);
-Data* getPreviousData(FILE *file, Data *currentData);
+Data* getPrevData(FILE *file, Data *currentData);
 
 // Function to free a Data object
 void freeData(Data* data);

@@ -66,8 +66,10 @@ Row* getPrevRow(FILE *file, Row *currentRow) {
 // Function to get the last Data element in the Row
 Data* getLastData(FILE *file, Row *currentRow) {
     if (!currentRow) return NULL;
+    printf("getLastData entry %d %d\n", currentRow->fileRow.lastDataOffset, currentRow->lastData->fileData.offset);
     if (currentRow->lastData) return currentRow->lastData;
 
+    printf("getLastdata %d\n", currentRow->fileRow.lastDataOffset);
     // Load from file if the lastData is not in memory and file is provided
     if (file && currentRow->fileRow.lastDataOffset != 0) {
         Data* lastData = malloc(sizeof(Data));
@@ -75,6 +77,7 @@ Data* getLastData(FILE *file, Row *currentRow) {
 
         fseek(file, currentRow->fileRow.lastDataOffset, SEEK_SET);
         deserializeData(file, lastData);  // Assuming deserializeData is implemented elsewhere
+        printf("getLastData offset %d %d\n", lastData->fileData.offset, currentRow->fileRow.lastDataOffset);
         currentRow->lastData = lastData;
         return lastData;
     }

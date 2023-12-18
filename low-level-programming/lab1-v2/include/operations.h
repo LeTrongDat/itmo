@@ -10,7 +10,7 @@ typedef struct RowNode {
 } RowNode;
 
 // Function pointer type for row condition evaluation
-typedef bool (*ConditionFunc)(const Row*);
+typedef bool (*ConditionFunc)(FILE *file, const Row*);
 
 // Database management
 Database* createDatabase(const char* name);
