@@ -230,3 +230,171 @@ void addColumn(Database *db, const char *tableName, ColumnMetadata columnMetadat
     // free(newColumn);
 }
 
+void addRow(Database *db, const char *tableName, Data *data) {
+    if (db == NULL || tableName == NULL || data == NULL) {
+        fprintf(stderr, "Error: Invalid parameters for addRow.\n");
+        return;
+    }
+
+    // Get the specified table
+    Table *table = getTableByName(db, tableName);
+    if (table == NULL) {
+        fprintf(stderr, "Error: Table not found.\n");
+        return;
+    }
+
+    if (table->metadata.columnCount == 0) {
+        fprintf(stderr, "Error: No columns in the table to add data.\n");
+        return;
+    }
+
+    // Add an empty row to the specified table
+    Row *newRow = addEmptyRow(db, tableName);
+    if (newRow == NULL) {
+        fprintf(stderr, "Error: Unable to add a new row to the table.\n");
+        return;
+    }
+
+    // Iterate through the columns to set data types for each data element
+    Column *currentColumn = getFirstColumn(db, tableName);
+    for (int i = 0; i < table->metadata.columnCount; i++) {
+        if (currentColumn == NULL) {
+            fprintf(stderr, "Error: Mismatch in the number of columns and data.\n");
+            return;
+        }
+
+        data[i].type = currentColumn->metadata.dataType;
+
+        Column *nextColumn = getNextColumn(db, currentColumn);
+        free(currentColumn); // Clean up the current column
+        currentColumn = nextColumn;
+    }
+
+    // Add data items to the new row
+    for (int i = 0; i < table->metadata.columnCount; i++) {
+        addData(db, newRow, &data[i]);
+    }
+}
+
+RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predicate) {
+    if (db == NULL || tableName == NULL || predicate == NULL) {
+        return NULL;
+    }
+
+    Table *table = getTableByName(db, tableName);
+    if (table == NULL) {
+        return NULL;
+    }
+
+    RowNode *head = NULL;
+    RowNode *tail = NULL;
+
+    Row *currentRow = getFirstRow(db, tableName);
+    while (currentRow != NULL) {
+        if (predicate(db, currentRow)) {
+            RowNode *newNode = (RowNode *)malloc(sizeof(RowNode));
+            newNode->row = currentRow;
+            newNode->next = NULL;
+
+            if (head == NULL) {
+                head = newNode;
+                tail = newNode;
+            } else {
+                tail->next = newNode;
+                tail = newNode;
+            }
+        }
+
+        Row *nextRow = deserializeRow(db, currentRow->node.nextOffset);
+        currentRow = nextRow;
+    }
+
+    return head;
+}
+
+void deleteRows(Database *db, const char *tableName, PredicateFunction predicate) {
+    if (db == NULL || tableName == NULL || predicate == NULL) {
+        fprintf(stderr, "Error: Invalid parameters for deleteRows.\n");
+        return;
+    }
+
+    Table *table = getTableByName(db, tableName);
+    if (table == NULL) {
+        fprintf(stderr, "Error: Table not found.\n");
+        return;
+    }
+
+    Row *currentRow = getFirstRow(db, tableName);
+    while (currentRow != NULL) {
+        Row *nextRow = getNextRow(db, currentRow);
+
+        // Check if the row satisfies the predicate
+        if (predicate(db, currentRow)) {
+            deleteRow(db, tableName, currentRow);
+        }
+
+        // Move to the next row
+        currentRow = nextRow;
+    }
+}
+
+void updateRows(Database *db, const char *tableName, PredicateFunction predicate, Data *newData) {
+    if (db == NULL || tableName == NULL || predicate == NULL || newData == NULL) {
+        fprintf(stderr, "Error: Invalid parameters for updateRows.\n");
+        return;
+    }
+
+    Table *table = getTableByName(db, tableName);
+    if (table == NULL) {
+        fprintf(stderr, "Error: Table not found.\n");
+        return;
+    }
+
+    Row *currentRow = getFirstRow(db, tableName);
+    while (currentRow != NULL) {
+        Row *nextRow = getNextRow(db, currentRow);
+
+        if (predicate(db, currentRow)) {
+            // Create a new row with the updated data
+            Row *updatedRow = addEmptyRow(db, tableName);
+            if (updatedRow == NULL) {
+                fprintf(stderr, "Error: Unable to add a new row for updating.\n");
+                currentRow = nextRow;
+                continue;
+            }
+
+            // Add new data to the updated row
+            for (int i = 0; i < table->metadata.columnCount; i++) {
+                addData(db, updatedRow, &newData[i]);
+            }
+
+            // Relink adjacent rows
+            Row *prevRow = getPrevRow(db, currentRow);
+            if (prevRow != NULL) {
+                prevRow->node.nextOffset = updatedRow->node.offset;
+                serializeRow(db, prevRow);
+                free(prevRow);
+            } else {
+                table->metadata.firstRowOffset = updatedRow->node.offset;
+                serializeTable(db, table);
+            }
+
+            if (nextRow != NULL) {
+                nextRow->node.prevOffset = updatedRow->node.offset;
+                serializeRow(db, nextRow);
+            }
+
+            // Delete the original row
+            // deleteRow(db, tableName, currentRow);
+        }
+
+        currentRow = nextRow;
+    }
+}
+
+
+
+
+
+
+
