@@ -432,7 +432,7 @@ void updateRow(Database* db, const char* tableName, Data* newData, ConditionFunc
     // Iterate over rows in the table and apply the condition function
     Row* currentRow = table->lastRow;
     while (currentRow) {
-        if (condition(db, currentRow)) {
+        if (condition(file, currentRow)) {
             // Update the data in the row
             Data* currentData = currentRow->lastData;
             Data* newDataPtr = newData;
@@ -491,7 +491,7 @@ void deleteRow(Database* db, const char* tableName, ConditionFunc condition) {
     Row* prevRow = NULL;
 
     while (currentRow) {
-        if (condition(db, currentRow)) {
+        if (condition(file, currentRow)) {
             // Update the fileRow offsets for adjacent rows
             if (prevRow) {
                 prevRow->fileRow.nextRowOffset = currentRow->fileRow.nextRowOffset;
