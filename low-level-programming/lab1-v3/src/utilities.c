@@ -89,7 +89,8 @@ Row* addEmptyRow(Database *db, const char *tableName) {
     }
 
     // Initialize the new row node
-    newRow->node.offset = fseek(db->dbConnection, 0, SEEK_END);
+    fseek(db->dbConnection, 0, SEEK_END);
+    newRow->node.offset = ftell(db->dbConnection);
     newRow->node.prevOffset = -1; // New row is at the beginning
     newRow->node.nextOffset = table->metadata.firstRowOffset; // Next is the current first row
     newRow->node.prevNode = NULL;
@@ -153,6 +154,7 @@ Row* addData(Database *db, Row* row, Data *data) {
     // Copy the value based on the data type
     switch (data->type) {
         case STRING:
+            newData->dataSize = strlen(data->value.strValue);
             newData->value.strValue = strdup(data->value.strValue);
             break;
         case BOOLEAN:
@@ -167,12 +169,12 @@ Row* addData(Database *db, Row* row, Data *data) {
     }
 
     // Set the offset for the new data
-    newData->node.offset = fseek(db->dbConnection, 0, SEEK_END);
+    fseek(db->dbConnection, 0, SEEK_END);
+    newData->node.offset = ftell(db->dbConnection);
     newData->node.prevOffset = -1; // New data is at the beginning
     newData->node.nextOffset = row->metadata.firstDataOffset; // Next is the current first data
     newData->node.prevNode = NULL;
     newData->node.nextNode = NULL;
-
     // Get the current first data and update its previous link
     Data *currentFirstData = getFirstData(db, row);
     if (currentFirstData != NULL) {
@@ -264,35 +266,75 @@ void deleteRow(Database *db, const char *tableName, Row* rowToDelete) {
         return;
     }
 
-    // Get the previous and next rows
     Row *prevRow = getPrevRow(db, rowToDelete);
     Row *nextRow = getNextRow(db, rowToDelete);
 
-    // Update the previous row's nextOffset, if it exists
     if (prevRow != NULL) {
         prevRow->node.nextOffset = rowToDelete->node.nextOffset;
         serializeRow(db, prevRow);
         free(prevRow);
     } else {
-        // If there's no previous row, update the table's firstRowOffset
         table->metadata.firstRowOffset = rowToDelete->node.nextOffset;
     }
 
-    // Update the next row's prevOffset, if it exists
     if (nextRow != NULL) {
         nextRow->node.prevOffset = rowToDelete->node.prevOffset;
         serializeRow(db, nextRow);
         free(nextRow);
     }
 
-    // Decrement the record count of the table
     if (table->metadata.recordCount > 0) {
         table->metadata.recordCount--;
     }
 
-    // Serialize the updated table metadata
     serializeTable(db, table);
 }
+
+int getColumnCount(Database* db, const char* tableName) {
+    Table* table = getTableByName(db, tableName);
+    if (table != NULL) {
+        return table->metadata.columnCount;
+    }
+    return -1;
+}
+
+Column* getColumnByIndex(Database* db, Table* table, int index) {
+    if (db == NULL || table == NULL || index < 0 || index >= table->metadata.columnCount) {
+        return NULL;
+    }
+
+    // Columns are prepended, so the last column has index 0, second last has index 1, and so on.
+    int targetIndex = table->metadata.columnCount - 1 - index;
+
+    Column* currentColumn = getFirstColumn(db, table->metadata.tableName.value);
+    for (int i = 0; currentColumn != NULL && i < targetIndex; ++i) {
+        Column* nextColumn = getNextColumn(db, currentColumn);
+        currentColumn = nextColumn;
+    }
+
+    return currentColumn; // This will be NULL if index is out of range
+}
+
+bool isColumnExists(Database* db, const char* tableName, const char* columnName) {
+    if (db == NULL || tableName == NULL || columnName == NULL) {
+        return false;
+    }
+
+    Table* table = getTableByName(db, tableName);
+    if (table == NULL) {
+        return false;
+    }
+
+    for (int i = 0; i < table->metadata.columnCount; i++) {
+        Column* column = getColumnByIndex(db, table, i);
+        if (column != NULL && strcmp(column->metadata.columnName.value, columnName) == 0) {
+            return true; 
+        }
+    }
+
+    return false;
+}
+
 
 
 

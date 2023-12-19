@@ -22,4 +22,4 @@ set(SOURCES
 add_library(database_lib ${SOURCES})
 
 # Add subdirectory for tests
-# add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests)

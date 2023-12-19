@@ -1,6 +1,0 @@
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles/database_lib.dir
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles/edit_cache.dir
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles/rebuild_cache.dir
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/tests/CMakeFiles/test_operations.dir
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/tests/CMakeFiles/edit_cache.dir
-/Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/tests/CMakeFiles/rebuild_cache.dir

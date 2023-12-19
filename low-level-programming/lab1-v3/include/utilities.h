@@ -2,6 +2,7 @@
 #define UTILITIES_H
 
 #include "types.h"
+#include <stdbool.h>
 
 Table* getFirstTable(Database *db);
 
@@ -26,5 +27,11 @@ Row* getPrevRow(Database *db, Row* currentRow);
 Row* getNextRow(Database *db, Row* currentRow);
 
 void deleteRow(Database *db, const char *tableName, Row* rowToDelete);
+
+int getColumnCount(Database* db, const char* tableName);
+
+bool isColumnExists(Database* db, const char* tableName, const char* columnName);
+
+Column* getColumnByIndex(Database* db, Table* table, int index);
 
 #endif // UTILITIES_H
