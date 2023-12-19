@@ -13,8 +13,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Specify the source directory and the list of source files
 set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 set(SOURCES 
-    ${SOURCE_DIR}/db.c 
-    ${SOURCE_DIR}/table.c 
+    ${SOURCE_DIR}/operations.c
+    ${SOURCE_DIR}/types.c
     ${SOURCE_DIR}/utilities.c
 )
 

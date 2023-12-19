@@ -1,27 +1,37 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "db.h"
-#include "data_types.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "types.h"
+#include <stdbool.h>
 
-// Helper function to write individual data items to file
-void writeDataToFile(FILE *file, const Data *data);
+Table* getFirstTable(Database *db);
 
-void writeDatabaseToFile(const Database *db);
+Table* getTableByName(Database *db, const char *tableName);
 
-TableRow *readRow(FILE *file, TableColumn *columns, int numColumns);
+Column* getFirstColumn(Database *db, const char *tableName);
 
-Table *readTable(FILE *file);
+Column* getNextColumn(Database *db, Column *currentColumn);
 
-// Helper function to free a table row
-void freeTableRow(TableRow *row);
+Row* getFirstRow(Database *db, const char *tableName);
 
-// Helper function to free a table
-void freeTable(Table *table);
+Row* addEmptyRow(Database *db, const char *tableName);
 
-Table *getTable(Database *db, const char *tableName);
+Row* addData(Database *db, Row* row, Data *data);
 
-#endif
+Data* getFirstData(Database *db, Row* row);
+
+Data* getDataByIndex(Database *db, const char *tableName, Row* row, int index);
+
+Row* getPrevRow(Database *db, Row* currentRow);
+
+Row* getNextRow(Database *db, Row* currentRow);
+
+void deleteRow(Database *db, const char *tableName, Row* rowToDelete);
+
+int getColumnCount(Database* db, const char* tableName);
+
+bool isColumnExists(Database* db, const char* tableName, const char* columnName);
+
+Column* getColumnByIndex(Database* db, Table* table, int index);
+
+#endif // UTILITIES_H
