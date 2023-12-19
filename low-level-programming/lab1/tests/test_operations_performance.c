@@ -221,10 +221,66 @@ void testDeleteRowsPerformance() {
     remove("PerfTestDB.db");
 }
 
+long getFileSize(const char* filename) {
+    FILE* file = fopen(filename, "rb");
+    if (file == NULL) {
+        return -1;
+    }
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fclose(file);
+    return size;
+}
+
+void testFileSizeChanges() {
+    printf("Testing file size changes during add and delete operations...\n");
+
+    Database* db;
+    setupDatabaseForTesting(&db, "PerfTestDB", "PerfTestTable");
+
+    FILE* file = fopen("fileSizeChanges.csv", "w");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file for writing.\n");
+        return;
+    }
+
+    fprintf(file, "RowNumber,FileSizeBytes\n");
+
+    // Add 100 rows
+    for (int i = 0; i < 100; ++i) {
+        Data rowData[2] = {{INTEGER, .value.intValue = i}, {STRING, .value.strValue = "Sample Name"}};
+        addRow(db, "PerfTestTable", rowData);
+        fprintf(file, "%d,%ld\n", i, getFileSize("PerfTestDB.db"));
+    }
+
+    // Delete 50 rows
+    for (int i = 0; i < 50; ++i) {
+        globalIDToDelete = i;
+        deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate);
+        fprintf(file, "%d,%ld\n", i, getFileSize("PerfTestDB.db"));
+    }
+
+    // Add another 100 rows
+    for (int i = 50; i < 150; ++i) {
+        Data rowData[2] = {{INTEGER, .value.intValue = i}, {STRING, .value.strValue = "New Sample Name"}};
+        addRow(db, "PerfTestTable", rowData);
+        fprintf(file, "%d,%ld\n", i, getFileSize("PerfTestDB.db"));
+    }
+
+    printf("File size data recorded in 'fileSizeChanges.csv'\n");
+
+    fclose(file);
+
+    // Clean up
+    closeDatabase(db);
+    remove("PerfTestDB.db");
+}
+
 int main() {
     testAddRowPerformance();
     testQueryRowsPerformance();
     testUpdateRowsPerformance();
     testDeleteRowsPerformance();
+    testFileSizeChanges();
     return 0;
 }
