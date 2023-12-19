@@ -1,6 +1,6 @@
-#include "operations.h"
-#include "types.h"
-#include "utilities.h"
+#include "../include/operations.h"
+#include "../include/types.h"
+#include "../include/utilities.h"
 #include <string.h>
 
 Database* createDatabase(const char *databaseName) {
@@ -259,8 +259,8 @@ void addRow(Database *db, const char *tableName, Data *data) {
     }
 
     // Add an empty row to the specified table
-    Row *newRow = addEmptyRow(db, tableName);
-    if (newRow == NULL) {
+    Row *newrow = addEmptyRow(db, tableName);
+    if (newrow == NULL) {
         fprintf(stderr, "Error: Unable to add a new row to the table.\n");
         return;
     }
@@ -281,7 +281,7 @@ void addRow(Database *db, const char *tableName, Data *data) {
 
     // Add data items to the new row
     for (int i = 0; i < table->metadata.columnCount; i++) {
-        addData(db, newRow, &data[i]);
+        addData(db, newrow, &data[i]);
     }
 }
 
@@ -365,12 +365,26 @@ void updateRows(Database *db, const char *tableName, PredicateFunction predicate
 
         if (predicate(db, currentRow)) {
             // Create a new row with the updated data
-            Row *updatedRow = addEmptyRow(db, tableName);
+            Row *updatedRow = (Row *)malloc(sizeof(Row));
             if (updatedRow == NULL) {
-                fprintf(stderr, "Error: Unable to add a new row for updating.\n");
-                currentRow = nextRow;
-                continue;
+                fprintf(stderr, "Error: Memory allocation failed for Row.\n");
+                return;
             }
+
+            // Initialize the new row node
+            fseek(db->dbConnection, 0, SEEK_END);
+            updatedRow->node.offset = ftell(db->dbConnection);
+            updatedRow->node.prevOffset = -1;
+            updatedRow->node.nextOffset = -1; 
+            updatedRow->node.prevNode = NULL;
+            updatedRow->node.nextNode = NULL;
+            updatedRow->firstData = NULL; // No data in the new row yet
+
+            // Initialize row metadata
+            updatedRow->metadata.firstDataOffset = -1;
+
+            // Serialize the new row (this should update newrow->node.offset)
+            serializeRow(db, updatedRow);
 
             // Iterate through the columns to set data types for each data element
             Column *currentColumn = getFirstColumn(db, tableName);
@@ -392,20 +406,20 @@ void updateRows(Database *db, const char *tableName, PredicateFunction predicate
             }
 
             // Relink adjacent rows
-            // Row *prevRow = getPrevRow(db, currentRow);
-            // if (prevRow != NULL) {
-            //     prevRow->node.nextOffset = updatedRow->node.offset;
-            //     serializeRow(db, prevRow);
-            //     free(prevRow);
-            // } else {
-            //     table->metadata.firstRowOffset = updatedRow->node.offset;
-            //     serializeTable(db, table);
-            // }
+            Row *prevRow = getPrevRow(db, currentRow);
+            if (prevRow != NULL) {
+                prevRow->node.nextOffset = updatedRow->node.offset;
+                serializeRow(db, prevRow);
+                free(prevRow);
+            } else {
+                table->metadata.firstRowOffset = updatedRow->node.offset;
+                serializeTable(db, table);
+            }
 
-            // if (nextRow != NULL) {
-            //     nextRow->node.prevOffset = updatedRow->node.offset;
-            //     serializeRow(db, nextRow);
-            // }
+            if (nextRow != NULL) {
+                nextRow->node.prevOffset = updatedRow->node.offset;
+                serializeRow(db, nextRow);
+            }
 
             // Delete the original row
             // deleteRow(db, tableName, currentRow);

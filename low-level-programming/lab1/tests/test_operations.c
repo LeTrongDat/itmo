@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "operations.h"
-#include "utilities.h"
+#include "../include/operations.h"
+#include "../include/utilities.h"
 
 void testCreateDatabase() {
     printf("Testing createDatabase...\n");
@@ -233,21 +233,18 @@ void setupDatabaseForTesting(Database** db, const char* dbName, const char* tabl
         exit(1); // Exit or handle the error as appropriate
     }
 
-    // Create a new table
     createTable(*db, tableName);
 
-    // Add columns to the table
     ColumnMetadata idColumn = {{2, "ID"}, INTEGER};
     ColumnMetadata nameColumn = {{4, "Name"}, STRING};
 
     addColumn(*db, tableName, idColumn);
     addColumn(*db, tableName, nameColumn);
 
-    // Insert multiple rows into the table
     for (int i = 1; i <= 100; ++i) {
         Data rowData[2];
         char name[50];
-        sprintf(name, "Person %d", i); // Generating a name for each row
+        sprintf(name, "Person %d", i);
 
         // rowData[0].type = INTEGER;
         rowData[0].value.intValue = i;
@@ -318,7 +315,9 @@ void testUpdateRows() {
     // Verify the update
     Row* row = getFirstRow(db, "TestTable");
     int updatedCount = 0;
+    int rowCount = 0;
     while (row != NULL) {
+        rowCount++;
         Data* updatedID = getDataByIndex(db, "TestTable", row, 0);
         Data* updatedName = getDataByIndex(db, "TestTable", row, 1);
 
@@ -327,7 +326,7 @@ void testUpdateRows() {
         }
         row = getNextRow(db, row);
     }
-
+    printf("Number of rows: %d\n", rowCount);
     printf("Number of rows updated: %d\n", updatedCount);
 
     if (updatedCount == 50) {
