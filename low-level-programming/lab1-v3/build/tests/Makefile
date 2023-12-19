@@ -87,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build//CMakeFiles/progress.marks
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(CMAKE_COMMAND) -E cmake_progress_start /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/tests//CMakeFiles/progress.marks
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 clean
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/clean
 .PHONY : clean
 
 # The main clean target
@@ -103,116 +103,56 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-#=============================================================================
-# Target rules for targets named database_lib
+# Convenience name for target.
+tests/CMakeFiles/test_operations.dir/rule:
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_operations.dir/rule
+.PHONY : tests/CMakeFiles/test_operations.dir/rule
 
-# Build rule for target.
-database_lib: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 database_lib
-.PHONY : database_lib
-
-# fast build rule for target.
-database_lib/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/build
-.PHONY : database_lib/fast
-
-#=============================================================================
-# Target rules for targets named test_operations
-
-# Build rule for target.
-test_operations: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_operations
+# Convenience name for target.
+test_operations: tests/CMakeFiles/test_operations.dir/rule
 .PHONY : test_operations
 
 # fast build rule for target.
 test_operations/fast:
-	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_operations.dir/build.make tests/CMakeFiles/test_operations.dir/build
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_operations.dir/build.make tests/CMakeFiles/test_operations.dir/build
 .PHONY : test_operations/fast
 
-src/operations.o: src/operations.c.o
-.PHONY : src/operations.o
+test_operations.o: test_operations.c.o
+.PHONY : test_operations.o
 
 # target to build an object file
-src/operations.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/operations.c.o
-.PHONY : src/operations.c.o
+test_operations.c.o:
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_operations.dir/build.make tests/CMakeFiles/test_operations.dir/test_operations.c.o
+.PHONY : test_operations.c.o
 
-src/operations.i: src/operations.c.i
-.PHONY : src/operations.i
-
-# target to preprocess a source file
-src/operations.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/operations.c.i
-.PHONY : src/operations.c.i
-
-src/operations.s: src/operations.c.s
-.PHONY : src/operations.s
-
-# target to generate assembly for a file
-src/operations.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/operations.c.s
-.PHONY : src/operations.c.s
-
-src/types.o: src/types.c.o
-.PHONY : src/types.o
-
-# target to build an object file
-src/types.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/types.c.o
-.PHONY : src/types.c.o
-
-src/types.i: src/types.c.i
-.PHONY : src/types.i
+test_operations.i: test_operations.c.i
+.PHONY : test_operations.i
 
 # target to preprocess a source file
-src/types.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/types.c.i
-.PHONY : src/types.c.i
+test_operations.c.i:
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_operations.dir/build.make tests/CMakeFiles/test_operations.dir/test_operations.c.i
+.PHONY : test_operations.c.i
 
-src/types.s: src/types.c.s
-.PHONY : src/types.s
-
-# target to generate assembly for a file
-src/types.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/types.c.s
-.PHONY : src/types.c.s
-
-src/utilities.o: src/utilities.c.o
-.PHONY : src/utilities.o
-
-# target to build an object file
-src/utilities.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/utilities.c.o
-.PHONY : src/utilities.c.o
-
-src/utilities.i: src/utilities.c.i
-.PHONY : src/utilities.i
-
-# target to preprocess a source file
-src/utilities.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/utilities.c.i
-.PHONY : src/utilities.c.i
-
-src/utilities.s: src/utilities.c.s
-.PHONY : src/utilities.s
+test_operations.s: test_operations.c.s
+.PHONY : test_operations.s
 
 # target to generate assembly for a file
-src/utilities.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/database_lib.dir/build.make CMakeFiles/database_lib.dir/src/utilities.c.s
-.PHONY : src/utilities.c.s
+test_operations.c.s:
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_operations.dir/build.make tests/CMakeFiles/test_operations.dir/test_operations.c.s
+.PHONY : test_operations.c.s
 
 # Help Target
 help:
@@ -222,17 +162,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... database_lib"
 	@echo "... test_operations"
-	@echo "... src/operations.o"
-	@echo "... src/operations.i"
-	@echo "... src/operations.s"
-	@echo "... src/types.o"
-	@echo "... src/types.i"
-	@echo "... src/types.s"
-	@echo "... src/utilities.o"
-	@echo "... src/utilities.i"
-	@echo "... src/utilities.s"
+	@echo "... test_operations.o"
+	@echo "... test_operations.i"
+	@echo "... test_operations.s"
 .PHONY : help
 
 
@@ -244,6 +177,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /Users/datle/Projects/itmo/low-level-programming/lab1-v3/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
