@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libdatabase_lib.a CMakeFiles/database_lib.dir/src/operations.c.o CMakeFiles/database_lib.dir/src/types.c.o CMakeFiles/database_lib.dir/src/utilities.c.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libdatabase_lib.a
