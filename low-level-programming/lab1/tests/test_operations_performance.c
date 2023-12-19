@@ -95,7 +95,7 @@ void testQueryRowsPerformance() {
         return;
     }
 
-    fprintf(file, "RowNumber,QueryTimeInSeconds\n");
+    fprintf(file, "RowNumber,TimeInSeconds\n");
 
     for (int i = 0; i < numberOfRowsToAdd; ++i) {
         Data rowData[2] = {{INTEGER, .value.intValue = i}, {STRING, .value.strValue = "Sample Name"}};
@@ -142,7 +142,7 @@ void testUpdateRowsPerformance() {
         return;
     }
 
-    fprintf(file, "RowNumber,UpdateTimeInSeconds\n");
+    fprintf(file, "RowNumber,TimeInSeconds\n");
 
     Data newData[2] = {{INTEGER, .value.intValue = 999}, {STRING, .value.strValue = "Updated Name"}};
 
@@ -192,7 +192,7 @@ void testDeleteRowsPerformance() {
         return;
     }
 
-    fprintf(file, "RowNumber,DeleteTimeInSeconds\n");
+    fprintf(file, "RowNumber,TimeInSeconds\n");
 
     // Initially add 10000 rows
     for (int i = 0; i < numberOfRows; ++i) {
@@ -257,14 +257,14 @@ void testFileSizeChanges() {
     for (int i = 0; i < 50; ++i) {
         globalIDToDelete = i;
         deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate);
-        fprintf(file, "%d,%ld\n", i, getFileSize("PerfTestDB.db"));
+        fprintf(file, "%d,%ld\n", i+100, getFileSize("PerfTestDB.db"));
     }
 
     // Add another 100 rows
     for (int i = 50; i < 150; ++i) {
         Data rowData[2] = {{INTEGER, .value.intValue = i}, {STRING, .value.strValue = "New Sample Name"}};
         addRow(db, "PerfTestTable", rowData);
-        fprintf(file, "%d,%ld\n", i, getFileSize("PerfTestDB.db"));
+        fprintf(file, "%d,%ld\n", i+150, getFileSize("PerfTestDB.db"));
     }
 
     printf("File size data recorded in 'fileSizeChanges.csv'\n");
