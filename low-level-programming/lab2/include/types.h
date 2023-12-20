@@ -13,4 +13,6 @@ typedef struct CreateTable {
     Column* columns;
 } CreateTable;
 
+void printAST(CreateTable* createTable);
+
 #endif
