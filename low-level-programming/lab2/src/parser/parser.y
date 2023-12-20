@@ -9,16 +9,16 @@ extern void printAST(CreateTable* createTable);
 extern FILE *yyin;
 %}
 
-%token CREATE TABLE NUMBER
-%token LPAREN RPAREN COMMA SEMICOLON
-%token <strVal> IDENTIFIER
-
 %union {
     char* strVal;
     int numVal;
     Column* colVal;
     CreateTable* createTableVal;
 }
+
+%token CREATE TABLE NUMBER
+%token LPAREN RPAREN COMMA SEMICOLON
+%token <strVal> IDENTIFIER
 
 %type <createTableVal> command
 %type <createTableVal> create_table
