@@ -1,1 +1,1 @@
-CREATE TABLE mytable (id, name);
+SELECT a FROM b;
