@@ -15,3 +15,10 @@ $(BUILDDIR)/myparser: $(SRCDIR)/parser/lexer.l $(SRCDIR)/parser/parser.y $(SRCDI
 
 run:
 	@./$(BUILDDIR)/myparser $(TESTDIR)/create_table.sql
+	@./$(BUILDDIR)/myparser $(TESTDIR)/insert.sql
+	@./$(BUILDDIR)/myparser $(TESTDIR)/select.sql
+	@./$(BUILDDIR)/myparser $(TESTDIR)/update.sql
+	@./$(BUILDDIR)/myparser $(TESTDIR)/delete.sql
+
+
+debug: build run

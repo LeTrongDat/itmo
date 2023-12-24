@@ -1,1 +1,1 @@
-SELECT a FROM b;
+CREATE TABLE students (id INT, name VARCHAR(255), age BOOLEAN);

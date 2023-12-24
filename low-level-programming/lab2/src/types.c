@@ -28,6 +28,7 @@ ASTNode* createNode(ASTNodeType type, char *tokenName, char *value, int child_co
 void mergeNodes(ASTNode *target, ASTNode *source) {
     if (!target || !source || target->type != source->type) return;
 
+
     int newChildCount = target->child_count + source->child_count;
     target->children = (ASTNode**)realloc(target->children, sizeof(ASTNode*) * newChildCount);
 
@@ -66,6 +67,6 @@ void printAST(ASTNode *node, int level) {
     printf("\n");
 
     for (int i = 0; i < node->child_count; i++) {
-        if (node->children[i]) printAST(node->children[i], level + 1);
+        printAST(node->children[i], level+1);
     }
 }

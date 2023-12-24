@@ -1,0 +1,1 @@
+DELETE FROM students WHERE students.banned = true;

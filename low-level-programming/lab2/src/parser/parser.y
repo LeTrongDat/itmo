@@ -17,8 +17,10 @@ extern FILE *yyin;
 %token IDENTIFIER NUMBER STRING
 %token CREATE TABLE SELECT FROM WHERE JOIN ON UPDATE SET INSERT INTO DELETE
 %token PRIMARY_KEY FOREIGN_KEY REFERENCES
-%token LEFT_PAREN RIGHT_PAREN COMMA EQUAL PLUS MINUS MULTIPLY DIVIDE SEMICOLON AND OR
+%token LEFT_PAREN RIGHT_PAREN COMMA EQUAL PLUS MINUS MULTIPLY DIVIDE SEMICOLON AND OR VALUES
+%token GT LT GE LE NE
 
+%left NE GT LT GE LE 
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %left OR
@@ -32,11 +34,11 @@ extern FILE *yyin;
 
 %%
 
-stmt: select_stmt SEMICOLON { printAST($1, 0); }
-    | create_table_stmt SEMICOLON { printAST($1, 0); }
-    | update_stmt SEMICOLON { printAST($1, 0); }
-    | insert_stmt SEMICOLON { printAST($1, 0); }
-    | delete_stmt SEMICOLON { printAST($1, 0); }
+stmt: select_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
+    | create_table_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
+    | update_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
+    | insert_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
+    | delete_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
     ;
 
 select_stmt: SELECT select_list from_clause join_clause where_clause {
@@ -45,10 +47,10 @@ select_stmt: SELECT select_list from_clause join_clause where_clause {
     ;
 
 select_list: column_name {
-                $$ = createNode(NODE_TYPE_COLUMN_LIST, "COLUMN_LIST", NULL, 1, createNode(NODE_TYPE_COLUMN, "COLUMN", $1->value, 0));
+                $$ = createNode(NODE_TYPE_COLUMN_LIST, "COLUMN_LIST", NULL, 1, $1);
              }
     | select_list COMMA column_name {
-                mergeNodes($1, $3);
+                mergeNodes($1, createNode(NODE_TYPE_COLUMN_LIST, "COLUMN_LIST", NULL, 1, $3));
                 $$ = $1;
              }
     ;
@@ -63,21 +65,36 @@ from_clause: FROM table_name {
              }
     ;
 
-join_clause:
+join_clause: { $$ = NULL; }
     | JOIN table_name ON condition {
                 $$ = createNode(NODE_TYPE_JOIN, "JOIN", NULL, 2, $2, $4);
              }
     ;
 
-where_clause:
+where_clause: { $$ = NULL; }
     | WHERE condition {
                 $$ = createNode(NODE_TYPE_WHERE, "WHERE", NULL, 1, $2);
              }
     ;
 
-condition: expression EQUAL expression {
+condition: column_name EQUAL expression {
                 $$ = createNode(NODE_TYPE_CONDITION, "=", NULL, 2, $1, $3);
              }
+    | column_name NE expression {
+        $$ = createNode(NODE_TYPE_NE, "NE", NULL, 2, $1, $3);
+    }
+    | column_name GT expression {
+        $$ = createNode(NODE_TYPE_GT, "GT", NULL, 2, $1, $3);
+    }
+    | column_name LT expression {
+        $$ = createNode(NODE_TYPE_LT, "LT", NULL, 2, $1, $3);
+    }
+    | column_name GE expression {
+        $$ = createNode(NODE_TYPE_GE, "GE", NULL, 2, $1, $3);
+    }
+    | column_name LE expression {
+        $$ = createNode(NODE_TYPE_LE, "LE", NULL, 2, $1, $3);
+    }
     | condition AND condition {
                 $$ = createNode(NODE_TYPE_CONDITION, "AND", NULL, 2, $1, $3);
              }
@@ -86,8 +103,7 @@ condition: expression EQUAL expression {
              }
     ;
 
-expression: column_name
-    | expression PLUS expression {
+expression: expression PLUS expression {
                 $$ = createNode(NODE_TYPE_EXPRESSION, "ADD", NULL, 2, $1, $3);
              }
     | expression MINUS expression {
@@ -99,13 +115,14 @@ expression: column_name
     | expression DIVIDE expression {
                 $$ = createNode(NODE_TYPE_EXPRESSION, "DIVIDE", NULL, 2, $1, $3);
              }
+
     | LEFT_PAREN expression RIGHT_PAREN {
                 $$ = $2;
              }
     | NUMBER {
                 $$ = createNode(NODE_TYPE_LITERAL, "LITERAL", $1, 0);
              }
-    | STRING {
+    | IDENTIFIER {
                 $$ = createNode(NODE_TYPE_LITERAL, "LITERAL", $1, 0);
              }
     ;
@@ -120,12 +137,17 @@ create_table_stmt: CREATE TABLE IDENTIFIER LEFT_PAREN column_def_list RIGHT_PARE
                      }
     ;
 
-column_def_list: column_def
-    | column_def_list COMMA column_def
+column_def_list: column_def { 
+        $$ = createNode(NODE_TYPE_COLUMN_DEF_LIST, "COLUMN_DEF_LIST", NULL, 1, $1); 
+    }
+    | column_def_list COMMA column_def {
+        mergeNodes($1, createNode(NODE_TYPE_COLUMN_DEF_LIST, "COLUMN_DEF_LIST", NULL, 1, $3));
+        $$ = $1;
+    }
     ;
 
-column_def: IDENTIFIER data_type column_constraint {
-                $$ = createNode(NODE_TYPE_COLUMN_DEF, "COLUMN_DEF", $1, 2, $2, $3);
+column_def: IDENTIFIER data_type {
+                $$ = createNode(NODE_TYPE_COLUMN_DEF, "COLUMN_DEF", $1, 1, $2);
              }
     ;
     
@@ -149,7 +171,7 @@ data_type: INT {
              }
     ;
 
-column_constraint:
+column_constraint: { $$ = NULL; }
     | PRIMARY_KEY {
         $$ = createNode(NODE_TYPE_COLUMN_CONSTRAINT, "PRIMARY_KEY", NULL, 0);
     }
@@ -163,8 +185,8 @@ update_stmt: UPDATE table_name SET column_name EQUAL expression where_clause {
              }
     ;
 
-insert_stmt: INSERT INTO table_name LEFT_PAREN column_list RIGHT_PAREN value_list RIGHT_PAREN {
-                $$ = createNode(NODE_TYPE_INSERT, "INSERT", NULL, 3, $3, $5, $7);
+insert_stmt: INSERT INTO table_name LEFT_PAREN column_list RIGHT_PAREN VALUES LEFT_PAREN value_list RIGHT_PAREN {
+                $$ = createNode(NODE_TYPE_INSERT, "INSERT", NULL, 3, $3, $5, $9);
              }
     ;
 
