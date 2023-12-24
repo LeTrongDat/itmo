@@ -21,4 +21,4 @@ run:
 	@./$(BUILDDIR)/myparser $(TESTDIR)/delete.sql
 
 
-debug: build run
+all: build run

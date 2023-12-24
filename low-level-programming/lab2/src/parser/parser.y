@@ -23,8 +23,8 @@ extern FILE *yyin;
 %left NE GT LT GE LE 
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
-%left OR
 %left AND
+%left OR
 
 %type <ast_node> stmt select_stmt from_clause where_clause condition join_clause expression table_name column_name
 %type <ast_node> create_table_stmt update_stmt insert_stmt delete_stmt column_def_list column_def data_type column_constraint
