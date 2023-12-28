@@ -4,6 +4,8 @@
     extern FILE* yyin;
 %}
 
+%option header-file="build/lexer.h"
+
 %%
 
 "CREATE"                      { return CREATE; }
