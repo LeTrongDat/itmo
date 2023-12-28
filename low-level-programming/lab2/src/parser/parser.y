@@ -5,6 +5,7 @@
 extern int yylex();
 void yyerror(char *s);
 extern FILE *yyin;
+ASTNode *root;
 %}
 
 %union {
@@ -34,11 +35,11 @@ extern FILE *yyin;
 
 %%
 
-stmt: select_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
-    | create_table_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
-    | update_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
-    | insert_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
-    | delete_stmt SEMICOLON { printAST($1, 0); printf("-------------------------------------------------\n"); }
+stmt: select_stmt SEMICOLON { root = $1; }
+    | create_table_stmt SEMICOLON { root = $1; }
+    | update_stmt SEMICOLON { root = $1; }
+    | insert_stmt SEMICOLON { root = $1; }
+    | delete_stmt SEMICOLON { root = $1; }
     ;
 
 select_stmt: SELECT select_list from_clause join_clause where_clause {

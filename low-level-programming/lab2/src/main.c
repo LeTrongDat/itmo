@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include "../include/types.h"
 
 void yyerror(char *s);
 
 extern FILE *yyin;
 extern int yyparse();
+extern ASTNode *root;
 
 void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
@@ -23,6 +25,9 @@ int main(int argc, char *argv[]) {
 
     yyin = file;
     yyparse();
+
+    printAST(root, 0);
+    printf("-------------------------------------------------\n");
 
     fclose(file);
     return 0;
