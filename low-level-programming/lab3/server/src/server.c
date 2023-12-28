@@ -5,8 +5,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "zlog.h"
-#include "database.pb-c.h"
-#include "request_handler.h"
+#include "../../proto/database.pb-c.h"
+#include "../include/request_handler.h"
 
 #define MAX_BUFFER_SIZE 1024
 
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
         zlog_fini();
         return -2;
     }
-
+    
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
         zlog_error(c, "Socket creation failed");
@@ -58,6 +58,18 @@ int main(int argc, char *argv[]) {
         zlog_fini();
         return -1;
     }
+
+    Database *db = openDatabase(database_name);
+    if (db == NULL) {
+        db = createDatabase(database_name);
+        if (db == NULL) {
+            zlog_error(c, "Failed to open or create database");
+            zlog_fini();
+            return -1;
+        }
+    }
+
+    zlog_info(c, "Database opened or created successfully");
 
     zlog_info(c, "Server started on port %d", PORT);
 
@@ -86,7 +98,7 @@ int main(int argc, char *argv[]) {
             }
 
             Database__Response response = DATABASE__RESPONSE__INIT;
-            handle_request(request, &response);
+            handle_request(request, &response, db); 
             database__request__free_unpacked(request, NULL);
 
             unsigned response_length = database__response__get_packed_size(&response);
@@ -100,6 +112,7 @@ int main(int argc, char *argv[]) {
         close(new_socket);
     }
 
+    closeDatabase(db);
     zlog_fini();
     close(server_fd);
     return 0;

@@ -4,9 +4,9 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "database.pb-c.h"
+#include "../../proto/database.pb-c.h"
 
-#define PORT 8080
+#define PORT 8000
 #define SERVER_ADDR "127.0.0.1"
 #define BUFFER_SIZE 1024
 
