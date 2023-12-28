@@ -1,1 +1,7 @@
 build
+
+database.pb-c.c
+database.pb-c.h
+
+server
+client
