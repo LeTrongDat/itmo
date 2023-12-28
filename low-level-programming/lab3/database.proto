@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package database;
+
+message Request {
+    string query = 1;
+}
+
+message Response {
+    string message = 1;
+    bool success = 2;
+}
