@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef L2_TYPES_H
+#define L2_TYPES_H
 
 typedef enum {
     NODE_TYPE_SELECT,
