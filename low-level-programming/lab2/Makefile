@@ -11,7 +11,7 @@ $(BUILDDIR)/myparser: $(SRCDIR)/parser/lexer.l $(SRCDIR)/parser/parser.y $(SRCDI
 	@mkdir -p $(BUILDDIR)
 	bison -d $(SRCDIR)/parser/parser.y -o $(BUILDDIR)/parser.c
 	lex -o $(BUILDDIR)/lexer.c $(SRCDIR)/parser/lexer.l
-	gcc -I$(INCDIR) -o $(BUILDDIR)/myparser $(BUILDDIR)/lexer.c $(BUILDDIR)/parser.c $(SRCDIR)/types.c
+	gcc -I$(INCDIR) -o $(BUILDDIR)/myparser $(BUILDDIR)/lexer.c $(BUILDDIR)/parser.c $(SRCDIR)/types.c $(SRCDIR)/main.c
 
 run:
 	@./$(BUILDDIR)/myparser $(TESTDIR)/create_table.sql
