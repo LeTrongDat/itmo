@@ -195,17 +195,16 @@ column_list: column_name {
                 $$ = createNode(NODE_TYPE_COLUMN_LIST, "COLUMN_LIST", NULL, 1, $1); 
              }
     | column_list COMMA column_name {
-                mergeNodes($1, $3);
+                mergeNodes($1, createNode(NODE_TYPE_COLUMN_LIST, "COLUMN_LIST", NULL, 1, $3));
                 $$ = $1;
              }
     ;
 
 value_list: expression {
-                ASTNode* valueList = createNode(NODE_TYPE_VALUE_LIST, "VALUE_LIST", NULL, 1, $1);
-                $$ = valueList;
+                $$ = createNode(NODE_TYPE_VALUE_LIST, "VALUE_LIST", NULL, 1, $1);
              }
     | value_list COMMA expression {
-                mergeNodes($1, $3);
+                mergeNodes($1, createNode(NODE_TYPE_VALUE_LIST, "VALUE_LIST", NULL, 1, $3));
                 $$ = $1;
              }
     ;
