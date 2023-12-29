@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     yyin = file;
     yyparse();
 
-    printAST(root, 0);
+    printf("%s\n", toString(root, 0));
     printf("-------------------------------------------------\n");
 
     fclose(file);

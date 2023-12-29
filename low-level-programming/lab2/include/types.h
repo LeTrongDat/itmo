@@ -45,6 +45,6 @@ void appendChild(ASTNode *parent, ASTNode *child);
 
 void freeAST(ASTNode *node);
 
-void printAST(ASTNode *node, int level);
+char* toString(ASTNode *node, int level);
 
 #endif

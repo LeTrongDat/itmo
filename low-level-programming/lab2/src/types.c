@@ -53,20 +53,51 @@ void freeAST(ASTNode *node) {
     free(node);
 }
 
+char* appendStr(char *orig, const char *fmt, ...) {
+    va_list args;
+    char *buffer;
+    int needed, new_len;
 
-void printAST(ASTNode *node, int level) {
-    if (!node) return;
+    va_start(args, fmt);
+    needed = vsnprintf(NULL, 0, fmt, args);
+    va_end(args);
+
+    new_len = (orig ? strlen(orig) : 0) + needed + 1;
+    buffer = malloc(new_len);
+
+    if (orig) {
+        strcpy(buffer, orig);
+        free(orig);
+    }
+
+    va_start(args, fmt);
+    vsnprintf(buffer + (new_len - needed - 1), needed + 1, fmt, args);
+    va_end(args);
+
+    return buffer;
+}
+
+char* toString(ASTNode *node, int level) {
+    char *result = NULL;
+
+    if (!node) return NULL;
 
     for (int i = 0; i < level; i++) {
-        if (i == level - 1) printf("|-- ");
-        else printf("|   ");
+        if (i == level - 1) result = appendStr(result, "|-- ");
+        else result = appendStr(result, "|   ");
     }
 
-    printf("%s", node->tokenName);
-    if (node->value) printf(": %s", node->value);
-    printf("\n");
+    result = appendStr(result, "%s", node->tokenName);
+    if (node->value) result = appendStr(result, ": %s", node->value);
+    result = appendStr(result, "\n");
 
     for (int i = 0; i < node->child_count; i++) {
-        printAST(node->children[i], level+1);
+        char *childStr = toString(node->children[i], level + 1);
+        if (childStr) {
+            result = appendStr(result, "%s", childStr);
+            free(childStr);
+        }
     }
+
+    return result;
 }
