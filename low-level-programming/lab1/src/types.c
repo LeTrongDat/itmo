@@ -1,4 +1,5 @@
 #include "types.h"
+#include "utilities.h"
 #include <stdlib.h>
 
 void prependNode(Node *currentNode, Node *newNode) {
@@ -353,6 +354,60 @@ Data* deserializeData(Database *db, long offset) {
 
     return data;
 }
+
+char* dataTypeToString(DataType dataType) {
+    switch (dataType) {
+        case STRING: return "STRING";
+        case BOOLEAN: return "BOOLEAN";
+        case INTEGER: return "INTEGER";
+        case FLOAT: return "FLOAT";
+        default: return "UNKNOWN";
+    }
+}
+
+
+char* toJSONTable(Database *db, const char *tableName) {
+    if (!db || !tableName) return NULL;
+
+    Table *table = getTableByName(db, tableName);
+    if (!table) return NULL;
+
+    int buffer_size = 1024;
+    char *result = malloc(buffer_size);
+    if (!result) return NULL;
+    int length = 0;
+
+    length += snprintf(result + length, buffer_size - length, "{\n  \"tableName\": \"%s\",\n  \"columns\": [", 
+                       table->metadata.tableName.value);
+
+    Column *currentColumn = getFirstColumn(db, tableName); 
+    while (currentColumn) {
+        if (length >= buffer_size - 200) {
+            buffer_size *= 2;
+            result = realloc(result, buffer_size);
+            if (!result) return NULL;
+        }
+
+        length += snprintf(result + length, buffer_size - length, 
+                           "\n    {\"columnName\": \"%s\", \"dataType\": \"%s\"}", 
+                           currentColumn->metadata.columnName.value, 
+                           dataTypeToString(currentColumn->metadata.dataType));
+
+        currentColumn = getNextColumn(db, currentColumn);
+        if (currentColumn) {
+            length += snprintf(result + length, buffer_size - length, ",");
+        }
+    }
+
+    length += snprintf(result + length, buffer_size - length, "\n  ],\n  \"rows\": [");
+
+    length += snprintf(result + length, buffer_size - length, "\n  ]\n}");
+
+    return result;
+}
+
+
+
 
 
 

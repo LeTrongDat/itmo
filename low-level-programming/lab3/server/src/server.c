@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
             }
 
             Database__Response response = DATABASE__RESPONSE__INIT;
-            handle_request(request, &response, db); 
+            handleRequest(request, &response, db); 
             database__request__free_unpacked(request, NULL);
 
             unsigned response_length = database__response__get_packed_size(&response);

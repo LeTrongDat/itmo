@@ -41,8 +41,6 @@ typedef struct DatabaseMetadata {
     long firstTableOffset;
 } DatabaseMetadata;
 
-
-
 typedef struct Data {
     Node node;
     DataType type;
@@ -108,5 +106,8 @@ Column* deserializeColumn(Database *db, long offset);
 Row* deserializeRow(Database *db, long offset);
 
 Data* deserializeData(Database *db, long offset);
+
+char* toJSONTable(Database *db, const char *tableName);
+
 
 #endif
