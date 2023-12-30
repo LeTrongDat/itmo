@@ -74,7 +74,7 @@ void testAddRowPerformance() {
     remove("PerfTestDB.db");
 }
 
-bool queryAllPredicate(Database* db, const Row* row) {
+bool queryAllPredicate(Database* db, Row* row, PredicateContext* context) {
     // Predicate that matches all rows
     return true;
 }
@@ -104,7 +104,7 @@ void testQueryRowsPerformance() {
 
         // Measure query time
         start = clock();
-        queryRows(db, "PerfTestTable", queryAllPredicate);
+        queryRows(db, "PerfTestTable", queryAllPredicate, NULL);
         end = clock();
         query_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
 
@@ -121,7 +121,7 @@ void testQueryRowsPerformance() {
     remove("PerfTestDB.db");
 }
 
-bool updateAllPredicate(Database* db, const Row* row) {
+bool updateAllPredicate(Database* db, Row* row, PredicateContext* context) {
     // Predicate that matches all rows
     return true;
 }
@@ -152,7 +152,7 @@ void testUpdateRowsPerformance() {
 
         // Measure update time
         start = clock();
-        updateRows(db, "PerfTestTable", updateAllPredicate, newData);
+        updateRows(db, "PerfTestTable", updateAllPredicate, newData, NULL);
         end = clock();
         update_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
 
@@ -169,7 +169,7 @@ void testUpdateRowsPerformance() {
 
 static int globalIDToDelete;
 
-bool deleteSpecificIDPredicate(Database* db, const Row* row) {
+bool deleteSpecificIDPredicate(Database* db, Row* row, PredicateContext* context) {
     Data* data = getDataByIndex(db, "PerfTestTable", row, 0); // Assuming first column is ID
     bool result = (data != NULL && data->type == INTEGER && data->value.intValue == globalIDToDelete);
     return result;
@@ -204,7 +204,7 @@ void testDeleteRowsPerformance() {
     for (int idToDelete = numberOfRows - 1; idToDelete >= 0; --idToDelete) {
         globalIDToDelete = idToDelete; 
         start = clock();
-        deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate);
+        deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate, NULL);
         end = clock();
         delete_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
 
@@ -256,7 +256,7 @@ void testFileSizeChanges() {
     // Delete 50 rows
     for (int i = 0; i < 50; ++i) {
         globalIDToDelete = i;
-        deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate);
+        deleteRows(db, "PerfTestTable", deleteSpecificIDPredicate, NULL);
         fprintf(file, "%d,%ld\n", i+100, getFileSize("PerfTestDB.db"));
     }
 

@@ -315,7 +315,7 @@ Column* getColumnByIndex(Database* db, Table* table, int index) {
     return currentColumn; // This will be NULL if index is out of range
 }
 
-bool isColumnExists(Database* db, const char* tableName, const char* columnName) {
+int isColumnExists(Database* db, const char* tableName, const char* columnName) {
     if (db == NULL || tableName == NULL || columnName == NULL) {
         return false;
     }
@@ -328,11 +328,11 @@ bool isColumnExists(Database* db, const char* tableName, const char* columnName)
     for (int i = 0; i < table->metadata.columnCount; i++) {
         Column* column = getColumnByIndex(db, table, i);
         if (column != NULL && strcmp(column->metadata.columnName.value, columnName) == 0) {
-            return true; 
+            return table->metadata.columnCount - i - 1; 
         }
     }
 
-    return false;
+    return 0;
 }
 
 

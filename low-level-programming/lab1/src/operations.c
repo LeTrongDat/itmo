@@ -285,7 +285,7 @@ void addRow(Database *db, const char *tableName, Data *data) {
     }
 }
 
-RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predicate) {
+RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predicate, PredicateContext* context) {
     if (db == NULL || tableName == NULL || predicate == NULL) {
         return NULL;
     }
@@ -300,7 +300,7 @@ RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predic
 
     Row *currentRow = getFirstRow(db, tableName);
     while (currentRow != NULL) {
-        if (predicate(db, currentRow)) {
+        if (predicate(db, currentRow, NULL)) {
             RowNode *newNode = (RowNode *)malloc(sizeof(RowNode));
             newNode->row = currentRow;
             newNode->next = NULL;
@@ -321,7 +321,7 @@ RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predic
     return head;
 }
 
-void deleteRows(Database *db, const char *tableName, PredicateFunction predicate) {
+void deleteRows(Database *db, const char *tableName, PredicateFunction predicate, PredicateContext* context) {
     if (db == NULL || tableName == NULL || predicate == NULL) {
         fprintf(stderr, "Error: Invalid parameters for deleteRows.\n");
         return;
@@ -338,7 +338,7 @@ void deleteRows(Database *db, const char *tableName, PredicateFunction predicate
         Row *nextRow = getNextRow(db, currentRow);
 
         // Check if the row satisfies the predicate
-        if (predicate(db, currentRow)) {
+        if (predicate(db, currentRow, context)) {
             deleteRow(db, tableName, currentRow);
         }
 
@@ -347,7 +347,7 @@ void deleteRows(Database *db, const char *tableName, PredicateFunction predicate
     }
 }
 
-void updateRows(Database *db, const char *tableName, PredicateFunction predicate, Data *newData) {
+void updateRows(Database *db, const char *tableName, PredicateFunction predicate, Data *newData, PredicateContext* context) {
     if (db == NULL || tableName == NULL || predicate == NULL || newData == NULL) {
         fprintf(stderr, "Error: Invalid parameters for updateRows.\n");
         return;
@@ -363,7 +363,7 @@ void updateRows(Database *db, const char *tableName, PredicateFunction predicate
     while (currentRow != NULL) {
         Row *nextRow = getNextRow(db, currentRow);
 
-        if (predicate(db, currentRow)) {
+        if (predicate(db, currentRow, context)) {
             // Create a new row with the updated data
             Row *updatedRow = (Row *)malloc(sizeof(Row));
             if (updatedRow == NULL) {

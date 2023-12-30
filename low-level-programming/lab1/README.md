@@ -25,7 +25,7 @@ mkdir lab1/build
 cd lab1/build
 cmake ..
 make 
-./test_operations && ./test_operations_performance
+./tests/test_operations && ./tests/test_operations_performance
 cd ..
 ```
 

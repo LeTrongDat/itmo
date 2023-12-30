@@ -255,7 +255,7 @@ void setupDatabaseForTesting(Database** db, const char* dbName, const char* tabl
     }
 }
 
-bool examplePredicate(Database* db, const Row* row) {
+bool examplePredicate(Database* db, Row* row, PredicateContext* context) {
     Data* data = getDataByIndex(db, "TestTable", row, 0); 
     bool result = (data != NULL && data->type == INTEGER && data->value.intValue > 69);
     return result;
@@ -268,7 +268,7 @@ void testQueryRows() {
     setupDatabaseForTesting(&db, "TestDB", "TestTable");
 
     // Query rows using the predicate
-    RowNode* queriedRows = queryRows(db, "TestTable", examplePredicate);
+    RowNode* queriedRows = queryRows(db, "TestTable", examplePredicate, NULL);
 
     // // Verify the query result
     int matchedRowCount = 0;
@@ -294,7 +294,7 @@ void testQueryRows() {
     remove("TestDB.db");
 }
 
-bool updatePredicate(Database* db, const Row* row) {
+bool updatePredicate(Database* db, Row* row, PredicateContext* context) {
     Data* data = getDataByIndex(db, "TestTable", row, 0); // Check first column (ID)
     bool result = (data != NULL && data->type == INTEGER && data->value.intValue <= 50);
     return result;
@@ -310,7 +310,7 @@ void testUpdateRows() {
     Data newData[2] = {{INTEGER, .value.intValue = 999}, {STRING, .value.strValue = "Updated Name"}};
 
     // Update rows based on the predicate
-    updateRows(db, "TestTable", updatePredicate, newData);
+    updateRows(db, "TestTable", updatePredicate, newData, NULL);
 
     // Verify the update
     Row* row = getFirstRow(db, "TestTable");
@@ -338,7 +338,7 @@ void testUpdateRows() {
     remove("TestDB.db");
 }
 
-bool deletePredicate(Database* db, const Row* row) {
+bool deletePredicate(Database* db, Row* row, PredicateContext *context) {
     Data* data = getDataByIndex(db, "TestTable", row, 0); // Check first column (ID)
     bool result = (data != NULL && data->type == INTEGER && data->value.intValue <= 22);
     // Optionally free data if necessary
@@ -352,13 +352,13 @@ void testDeleteRows() {
     setupDatabaseForTesting(&db, "TestDB", "TestTable");
 
     // Delete rows based on the predicate
-    deleteRows(db, "TestTable", deletePredicate);
+    deleteRows(db, "TestTable", deletePredicate, NULL);
 
     // Verify the delete operation
     Row* row = getFirstRow(db, "TestTable");
     int remainingCount = 0;
     while (row != NULL) {
-        if (!deletePredicate(db, row)) {
+        if (!deletePredicate(db, row, NULL)) {
             remainingCount++;
         }
         row = getNextRow(db, row);

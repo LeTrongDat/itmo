@@ -366,7 +366,7 @@ char* dataTypeToString(DataType dataType) {
 }
 
 
-char* toJSONTable(Database *db, const char *tableName) {
+char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, const char **selectedColumns) {
     if (!db || !tableName) return NULL;
 
     Table *table = getTableByName(db, tableName);
@@ -400,6 +400,53 @@ char* toJSONTable(Database *db, const char *tableName) {
     }
 
     length += snprintf(result + length, buffer_size - length, "\n  ],\n  \"rows\": [");
+
+    while (rowNode) {
+        Row *currentRow = rowNode->row;
+        if (length >= buffer_size - 200) {
+            buffer_size *= 2;
+            result = realloc(result, buffer_size);
+            if (!result) return NULL;
+        }
+
+        length += snprintf(result + length, buffer_size - length, "\n    {");
+        for (int i = 0; selectedColumns[i] != NULL; i++) {
+            int columnIndex = isColumnExists(db, table->metadata.tableName.value, selectedColumns[i]);
+            if (columnIndex < 0) continue;
+
+            Data *data = getDataByIndex(db, table->metadata.tableName.value, currentRow, columnIndex);
+            Column *column = getColumnByIndex(db, table, columnIndex);
+            if (!data || !column) continue;
+
+            switch (column->metadata.dataType) {
+                case STRING:
+                    length += snprintf(result + length, buffer_size - length, "\"%s\": \"%s\"", selectedColumns[i], data->value.strValue);
+                    break;
+                case BOOLEAN:
+                    length += snprintf(result + length, buffer_size - length, "\"%s\": %s", selectedColumns[i], data->value.boolValue ? "true" : "false");
+                    break;
+                case INTEGER:
+                    length += snprintf(result + length, buffer_size - length, "\"%s\": %d", selectedColumns[i], data->value.intValue);
+                    break;
+                case FLOAT:
+                    length += snprintf(result + length, buffer_size - length, "\"%s\": %f", selectedColumns[i], data->value.floatValue);
+                    break;
+                default:
+                    length += snprintf(result + length, buffer_size - length, "\"%s\": null", selectedColumns[i]);
+            }
+
+            if (selectedColumns[i + 1] != NULL) {
+                length += snprintf(result + length, buffer_size - length, ", ");
+            }
+        }
+        length += snprintf(result + length, buffer_size - length, "}");
+
+        rowNode = rowNode->next;
+        if (rowNode) {
+            length += snprintf(result + length, buffer_size - length, ",");
+        }
+    }
+
 
     length += snprintf(result + length, buffer_size - length, "\n  ]\n}");
 

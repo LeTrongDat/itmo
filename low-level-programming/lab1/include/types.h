@@ -78,6 +78,10 @@ typedef struct Database {
     FILE *dbConnection;
 } Database;
 
+typedef struct RowNode {
+    Row *row;
+    struct RowNode *next;
+} RowNode;
 
 void prependNode(Node *currentNode, Node *newNode);
 
@@ -107,7 +111,7 @@ Row* deserializeRow(Database *db, long offset);
 
 Data* deserializeData(Database *db, long offset);
 
-char* toJSONTable(Database *db, const char *tableName);
+char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, const char **selectedColumns);
 
 
 #endif

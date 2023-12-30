@@ -30,7 +30,7 @@ void deleteRow(Database *db, const char *tableName, Row* rowToDelete);
 
 int getColumnCount(Database* db, const char* tableName);
 
-bool isColumnExists(Database* db, const char* tableName, const char* columnName);
+int isColumnExists(Database* db, const char* tableName, const char* columnName);
 
 Column* getColumnByIndex(Database* db, Table* table, int index);
 
