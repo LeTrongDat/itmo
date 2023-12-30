@@ -366,7 +366,7 @@ char* dataTypeToString(DataType dataType) {
 }
 
 
-char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, const char **selectedColumns) {
+char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, char **selectedColumns) {
     if (!db || !tableName) return NULL;
 
     Table *table = getTableByName(db, tableName);

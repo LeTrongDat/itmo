@@ -18,6 +18,7 @@ void addRow(Database *db, const char *tableName, Data *data);
 
 typedef struct PredicateContext {
     ASTNode *ast;
+    char* tableName;
 } PredicateContext;
 
 typedef bool (*PredicateFunction)(Database *db, Row* row, PredicateContext *context);

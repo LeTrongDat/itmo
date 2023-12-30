@@ -111,7 +111,7 @@ Row* deserializeRow(Database *db, long offset);
 
 Data* deserializeData(Database *db, long offset);
 
-char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, const char **selectedColumns);
+char* toJSONTable(Database *db, const char *tableName, RowNode *rowNode, char **selectedColumns);
 
 
 #endif
