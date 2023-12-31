@@ -28,12 +28,8 @@ server: build gen_proto gen_parser
 client: build
 	$(CC) $(CFLAGS) -o $(BUILDDIR)/client $(CLDIR)/**/*.c $(PROTODIR)/*.c $(LIBS)
 
-# run:
-# 	cd build && ./server 8000 db & 
-# 	cd build && ./client
-
 clean:
-	rm -f *.o server client database.pb-c.h database.pb-c.c
+	rm -f build/*
 
 all: gen_proto gen_parser build server client 
 

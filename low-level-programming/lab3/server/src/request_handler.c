@@ -189,37 +189,17 @@ char **convertToSelectedColumns(ASTNode *columnList) {
 }
 
 int selectRequest(ASTNode *root, Database__Response *response, Database *db) {
-    ASTNode *columnList = (ASTNode *)malloc(sizeof(ASTNode));
-    if (!columnList) {
-        return 0;
-    }
-    memcpy(columnList, root->children[0], sizeof(ASTNode));
+    ASTNode *columnList = root->children[0];
+    ASTNode *from = root->children[1];
+    ASTNode *join = root->children[2];
+    ASTNode *where = root->children[3];
 
-    ASTNode *from = (ASTNode *)malloc(sizeof(ASTNode));
-    if (!from) {
-        return 0;
-    }
-    memcpy(from, root->children[1], sizeof(ASTNode));
-
-    ASTNode *join = (ASTNode *)malloc(sizeof(ASTNode));
-    if (!join) {
-        return 0;
-    }
-    memcpy(join, root->children[2], sizeof(ASTNode)); 
-
-    ASTNode *where = (ASTNode *)malloc(sizeof(ASTNode));
-    if (!where) {
-        return 0;
-    }
-    memcpy(where, root->children[3], sizeof(ASTNode)); 
-
-    char *tableName = from->value;
+    char *tableName = from->children[0]->value;
     char **selectedColumns = convertToSelectedColumns(columnList);
     PredicateContext* ctx = (PredicateContext*) malloc(sizeof(PredicateContext));
     ctx->ast = where;
     ctx->tableName = tableName;
     RowNode *rowNode = queryRows(db, tableName, convertASTToPredicate, ctx);
-
     response->message = toJSONTable(db, tableName, rowNode, selectedColumns);
     response->success = 1;
     return 1;
@@ -361,7 +341,7 @@ int updateRequest(ASTNode *root, Database__Response *response, Database *db) {
     ctx->ast = whereNode;
     ctx->tableName = tableName;
 
-    updateRows(db, tableName, convertASTToPredicate, &newData, ctx);
+    updateRowsByColumn(db, tableName, convertASTToPredicate, &newData, ctx, columnName);
 
     if (newData.type == STRING) {
         free(newData.value.strValue);
@@ -385,8 +365,6 @@ void handleRequest(const Database__Request *request, Database__Response *respons
         response->success = 0;
         return;
     }
-
-    printf("%s\n", toString(root, 0));
 
     switch (root->type) {
     case NODE_TYPE_CREATE_TABLE:

@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
             if (bytes_received < 0) {
                 zlog_error(c, "Failed to receive message");
                 close(new_socket);
-                continue;
+                break;
             }
 
             Database__Request *request;
@@ -94,8 +94,12 @@ int main(int argc, char *argv[]) {
             if (request == NULL) {
                 zlog_error(c, "Failed to unpack request");
                 close(new_socket);
-                continue;
+                break;
             }
+
+            if (strcmp(request->query, "") == 0) continue;
+
+            zlog_info(c, "Receive request from client: %s", request->query);
 
             Database__Response response = DATABASE__RESPONSE__INIT;
             handleRequest(request, &response, db); 
