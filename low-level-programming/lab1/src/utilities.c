@@ -328,7 +328,7 @@ int isColumnExists(Database* db, const char* tableName, const char* columnName) 
     for (int i = 0; i < table->metadata.columnCount; i++) {
         Column* column = getColumnByIndex(db, table, i);
         if (column != NULL && strcmp(column->metadata.columnName.value, columnName) == 0) {
-            return table->metadata.columnCount - i - 1; 
+            return i;
         }
     }
 

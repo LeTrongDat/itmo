@@ -300,7 +300,7 @@ RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predic
 
     Row *currentRow = getFirstRow(db, tableName);
     while (currentRow != NULL) {
-        if (predicate(db, currentRow, NULL)) {
+        if (predicate(db, currentRow, context)) {
             RowNode *newNode = (RowNode *)malloc(sizeof(RowNode));
             newNode->row = currentRow;
             newNode->next = NULL;
@@ -335,15 +335,13 @@ void deleteRows(Database *db, const char *tableName, PredicateFunction predicate
 
     Row *currentRow = getFirstRow(db, tableName);
     while (currentRow != NULL) {
-        Row *nextRow = getNextRow(db, currentRow);
-
         // Check if the row satisfies the predicate
         if (predicate(db, currentRow, context)) {
             deleteRow(db, tableName, currentRow);
         }
 
         // Move to the next row
-        currentRow = nextRow;
+        currentRow = getNextRow(db, currentRow);
     }
 }
 
@@ -374,8 +372,8 @@ void updateRows(Database *db, const char *tableName, PredicateFunction predicate
             // Initialize the new row node
             fseek(db->dbConnection, 0, SEEK_END);
             updatedRow->node.offset = ftell(db->dbConnection);
-            updatedRow->node.prevOffset = -1;
-            updatedRow->node.nextOffset = -1; 
+            updatedRow->node.prevOffset = currentRow->node.prevOffset;
+            updatedRow->node.nextOffset = currentRow->node.nextOffset; 
             updatedRow->node.prevNode = NULL;
             updatedRow->node.nextNode = NULL;
             updatedRow->firstData = NULL; // No data in the new row yet
@@ -428,6 +426,82 @@ void updateRows(Database *db, const char *tableName, PredicateFunction predicate
         currentRow = nextRow;
     }
 }
+
+void updateRowsByColumn(Database *db, const char *tableName, PredicateFunction predicate, Data *newData, PredicateContext* context, const char *columnName){
+    if (db == NULL || tableName == NULL || predicate == NULL || newData == NULL) {
+        fprintf(stderr, "Error: Invalid parameters for updateRows.\n");
+        return;
+    }
+
+    Table *table = getTableByName(db, tableName);
+    if (table == NULL) {
+        fprintf(stderr, "Error: Table not found.\n");
+        return;
+    }
+
+    Row *currentRow = getFirstRow(db, tableName);
+    while (currentRow != NULL) {
+        Row *nextRow = getNextRow(db, currentRow);
+
+        if (predicate(db, currentRow, context)) {
+            // Create a new row with the updated data
+            Row *updatedRow = (Row *)malloc(sizeof(Row));
+            if (updatedRow == NULL) {
+                fprintf(stderr, "Error: Memory allocation failed for Row.\n");
+                return;
+            }
+
+            // Initialize the new row node
+            fseek(db->dbConnection, 0, SEEK_END);
+            updatedRow->node.offset = ftell(db->dbConnection);
+            updatedRow->node.prevOffset = currentRow->node.prevOffset;
+            updatedRow->node.nextOffset = currentRow->node.nextOffset; 
+            updatedRow->node.prevNode = NULL;
+            updatedRow->node.nextNode = NULL;
+            updatedRow->firstData = NULL; // No data in the new row yet
+
+            // Initialize row metadata
+            updatedRow->metadata.firstDataOffset = -1;
+
+            // Serialize the new row (this should update newrow->node.offset)
+            serializeRow(db, updatedRow);
+
+            // Iterate through the columns to set data types for each data element
+            for (int i = 0; i < table->metadata.columnCount; i++) {
+                Column *column = getColumnByIndex(db, table, i);
+                if (strcmp(column->metadata.columnName.value, columnName) == 0) {
+                    addData(db, updatedRow, newData);
+                    continue;
+                }
+
+                addData(db, updatedRow, getDataByIndex(db, tableName, currentRow, i));
+            } 
+
+
+            // Relink adjacent rows
+            Row *prevRow = getPrevRow(db, currentRow);
+            if (prevRow != NULL) {
+                prevRow->node.nextOffset = updatedRow->node.offset;
+                serializeRow(db, prevRow);
+                free(prevRow);
+            } else {
+                table->metadata.firstRowOffset = updatedRow->node.offset;
+                serializeTable(db, table);
+            }
+
+            if (nextRow != NULL) {
+                nextRow->node.prevOffset = updatedRow->node.offset;
+                serializeRow(db, nextRow);
+            }
+
+            // Delete the original row
+            // deleteRow(db, tableName, currentRow);
+        }
+
+        currentRow = nextRow;
+    }
+}
+
 
 
 

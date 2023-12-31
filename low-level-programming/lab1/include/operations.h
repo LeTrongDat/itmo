@@ -26,6 +26,7 @@ typedef bool (*PredicateFunction)(Database *db, Row* row, PredicateContext *cont
 RowNode* queryRows(Database *db, const char *tableName, PredicateFunction predicate, PredicateContext* context);
 void updateRows(Database *db, const char *tableName, PredicateFunction predicate, Data *newData, PredicateContext* context);
 void deleteRows(Database *db, const char *tableName, PredicateFunction predicate, PredicateContext* context);
+void updateRowsByColumn(Database *db, const char *tableName, PredicateFunction predicate, Data *newData, PredicateContext* context, const char *columnName);
 
 
 #endif // OPERATIONS_H
