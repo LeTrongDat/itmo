@@ -1,3 +1,5 @@
+from tabulate import tabulate
+
 class Process:
     def __init__(self, pid, bursts, arrival_time):
         self.pid = pid
@@ -70,6 +72,17 @@ class Process:
             self.start_time = current_time
             self.first_scheduled = True
 
+    def remaining_cpu_burst_time(self):
+        if self.current_burst_index < len(self.bursts):
+            burst_type, burst_duration = self.bursts[self.current_burst_index]
+            if burst_type == 'CPU':
+                return burst_duration
+        return float('inf')
+    
+    def response_ratio(self):
+        if self.service_time > 0:
+            return (self.waiting_time + self.service_time) / self.service_time
+        return float('inf')
 
 class OS:
     def __init__(self, num_processors, num_io_devices, scheduling_algorithm="fcfs", time_quantum=None):
@@ -105,7 +118,7 @@ class OS:
 
             self.current_time += 1
 
-        print(f"Simulation completed at time {self.current_time} ms")
+        # print(f"Simulation completed at time {self.current_time} ms")
 
     def update_queues(self):
         for process in self.all_processes:
@@ -118,13 +131,24 @@ class OS:
                 continue
             current_process = processor.current_process
             if current_process and current_process.is_cpu_burst_complete():
-                current_process.move_to_next_burst() # may be bug here
+                current_process.move_to_next_burst()
                 processor.remove_current_process()
                 if current_process.has_next_io_burst():
                     io_device = self.select_io_device_for_process(current_process)
                     io_device.add_process(current_process)
                 else:
                     current_process.mark_as_complete(self.current_time)
+                continue
+
+            if self.scheduling_algorithm == "round robin" and current_process.current_burst_time % self.time_quantum == 0:
+                processor.remove_current_process()
+                self.ready_queue.append(current_process)
+                continue
+
+            if self.scheduling_algorithm == "srt":
+                self.ready_queue.append(current_process)
+                processor.remove_current_process()
+                continue
 
         for io_device in self.io_devices:
             if io_device.is_idle():
@@ -139,10 +163,48 @@ class OS:
                     current_process.mark_as_complete(self.current_time)
 
     def schedule(self):
-        if self.scheduling_algorithm == "round robin":
+        if self.scheduling_algorithm == "spn":
+            self.schedule_spn()
+        elif self.scheduling_algorithm == "round robin":
             self.schedule_round_robin()
+        elif self.scheduling_algorithm == "srt":
+            self.schedule_srt()
+        elif self.scheduling_algorithm == "hrrn":
+            self.schedule_hrrn()
         else:
             self.schedule_fcfs()
+
+    def schedule_hrrn(self):
+        self.ready_queue.sort(key=lambda p: p.response_ratio(), reverse=True)
+
+        for processor in self.processors:
+            if processor.is_idle() and self.ready_queue:
+                next_process = self.ready_queue.pop(0)
+                if next_process.start_time is None:
+                    next_process.set_start_time(self.current_time)
+                processor.assign_process(next_process)
+
+    def schedule_srt(self):
+        self.ready_queue.sort(key=lambda p: (p.remaining_cpu_burst_time(), p.pid))
+        for processor in self.processors:
+            if processor.is_idle() and self.ready_queue:
+                next_process = self.ready_queue.pop(0)
+                if next_process.start_time is None:
+                    next_process.set_start_time(self.current_time)
+                processor.assign_process(next_process)
+
+    def schedule_spn(self):
+        self.ready_queue.sort(key=lambda p: p.remaining_cpu_burst_time())
+        
+        for processor in self.processors:
+            if processor.is_idle() and self.ready_queue:
+                next_process = self.ready_queue.pop(0)
+                if next_process.start_time is None:
+                    next_process.set_start_time(self.current_time)
+                processor.assign_process(next_process)
+
+    def schedule_round_robin(self):
+        self.schedule_fcfs()
 
     def schedule_fcfs(self):
         for processor in self.processors:
@@ -229,10 +291,24 @@ class Processor:
     def remove_current_process(self):
         self.current_process = None
 
+def collect_statistics(my_os):
+    stats = {'completed time': my_os.current_time}
+    for process in my_os.all_processes:
+        turnaround_time = process.waiting_time + process.service_time
+        tr_ts_ratio = turnaround_time / process.service_time if process.service_time > 0 else 0
+        stats[process.pid] = {
+            'arrival': process.arrival_time,
+            'service': process.service_time,
+            'start': process.start_time,
+            'finish': process.completion_time,
+            'turnaround': turnaround_time,
+            'tr/ts': round(tr_ts_ratio, 2),
+        }
+    return stats
 
 
-def main():
-    my_os = OS(num_processors=4, num_io_devices=2)
+def simulate(scheduling_algorithm, time_quantum=None):
+    my_os = OS(num_processors=4, num_io_devices=2, scheduling_algorithm=scheduling_algorithm, time_quantum=time_quantum)
 
     processes = [
         Process(1, [('CPU', 48), ('IO1', 12), ('CPU', 36), ('IO2', 16), ('CPU', 12), ('IO1', 12), ('CPU', 24), ('IO1', 14), ('CPU', 48), ('IO1', 12)], arrival_time=0),
@@ -243,20 +319,43 @@ def main():
         Process(6, [('CPU', 2), ('IO1', 20), ('CPU', 4), ('IO1', 20), ('CPU', 2), ('IO2', 12), ('CPU', 10), ('IO2', 20), ('CPU', 8), ('IO1', 14)], arrival_time=10)
     ]
 
+    # processes = [
+    #     Process(1, [('CPU', 3)], 0),
+    #     Process(2, [('CPU', 6)], 2),
+    #     Process(3, [('CPU', 4)], 4),
+    #     Process(4, [('CPU', 5)], 6),
+    #     Process(5, [('CPU', 2)], 8), 
+    # ]
+
     for process in processes:
         my_os.add_process(process)
 
     my_os.run()
 
-    print("Process Statistics with FCFS Scheduling")
-    print(f"{'PID':<12}{'Arrival':<12}{'Service':<12}{'Start':<12}{'Finish':<12}{'Turnaround ':<12}{'Tr/Ts':<12}")
-    for process in my_os.all_processes:
-        turnaround_time = process.waiting_time + process.service_time
-        tr_ts_ratio = turnaround_time / process.service_time if process.service_time > 0 else 0
-        print(f"{process.pid:<12}{process.arrival_time:<12}{process.service_time:<12}"
-              f"{process.start_time:<12}{process.completion_time:<12}{turnaround_time:<12}{tr_ts_ratio:<12.2f}")
+    return collect_statistics(my_os)
 
+def display_results(results):
+    headers = ["PID"] + [f"Process {pid}" for pid in range(1, 7)]
+    
+    for algorithm, stats in results.items():
+        print(f"\n{algorithm} Scheduling Statistics: {stats['completed time']} ms")
+        table_data = []
+        for stat_name in ['arrival', 'service', 'start', 'finish', 'turnaround', 'tr/ts']:
+            row = [stat_name] + [stats[pid][stat_name] for pid in range(1, 6)]
+            table_data.append(row)
+        
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
+def main():
+    results = {}
+    results['FCFS'] = simulate(None)
+    results['RR-1ms'] = simulate("round robin", time_quantum=1)
+    results['RR-4ms'] = simulate("round robin", time_quantum=4)
+    results['SPN'] = simulate("spn")
+    results['SRT'] = simulate("srt")
+    results['HRRN'] = simulate("hrrn")
+
+    display_results(results)
 
 if __name__ == "__main__":
     main()
