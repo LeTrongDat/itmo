@@ -10,6 +10,10 @@ class Process:
         self.waiting_time = 0
         self.current_burst_index = 0
         self.completed = False
+        self.service_time = sum(time for _, time in bursts)
+        self.start_time = None  
+        self.first_scheduled = False
+
 
     def mark_as_complete(self, completion_time):
         self.completed = True
@@ -61,15 +65,22 @@ class Process:
     def increment_waiting_time(self):
         self.waiting_time += 1
 
+    def set_start_time(self, current_time):
+        if not self.first_scheduled:
+            self.start_time = current_time
+            self.first_scheduled = True
+
 
 class OS:
-    def __init__(self, num_processors, num_io_devices):
+    def __init__(self, num_processors, num_io_devices, scheduling_algorithm="fcfs", time_quantum=None):
         self.processors = [Processor() for _ in range(num_processors)]
         self.io_devices = [IODevice(f'IO{i+1}') for i in range(num_io_devices)]
         self.ready_queue = []
         self.all_processes = []
         self.current_time = 0
-        self.scheduling_algorithm = None
+        self.scheduling_algorithm = scheduling_algorithm
+        self.time_quantum = time_quantum
+        self.quantum_counter = 0
 
     def add_process(self, process):
         self.all_processes.append(process)
@@ -85,6 +96,10 @@ class OS:
                     processor.process()
 
             self.process_io()
+            
+            for io_device in self.io_devices:
+                if not io_device.is_idle():
+                    io_device.process()
 
             self.increment_waiting_times()
 
@@ -103,7 +118,7 @@ class OS:
                 continue
             current_process = processor.current_process
             if current_process and current_process.is_cpu_burst_complete():
-                current_process.move_to_next_burst()
+                current_process.move_to_next_burst() # may be bug here
                 processor.remove_current_process()
                 if current_process.has_next_io_burst():
                     io_device = self.select_io_device_for_process(current_process)
@@ -124,9 +139,17 @@ class OS:
                     current_process.mark_as_complete(self.current_time)
 
     def schedule(self):
+        if self.scheduling_algorithm == "round robin":
+            self.schedule_round_robin()
+        else:
+            self.schedule_fcfs()
+
+    def schedule_fcfs(self):
         for processor in self.processors:
             if processor.is_idle() and self.ready_queue:
                 next_process = self.ready_queue.pop(0)
+                if next_process.start_time is None:
+                    next_process.set_start_time(self.current_time)
                 processor.assign_process(next_process)
 
 
@@ -134,7 +157,7 @@ class OS:
         for io_device in self.io_devices:
             if io_device.is_idle() and io_device.has_waiting_process():
                 next_process = io_device.get_next_process()
-                io_device.process(next_process)
+                io_device.assign_process(next_process)
 
     def increment_waiting_times(self):
         for process in self.ready_queue:
@@ -170,11 +193,21 @@ class IODevice:
             return self.queue.pop(0)
         return None
 
-    def process(self, process):
+    def assign_process(self, process):
         self.current_process = process
 
     def has_waiting_process(self):
         return len(self.queue) > 0
+
+    def process(self):
+        if self.current_process:
+            self.current_process.increment_burst_time()
+            if self.current_process.is_io_burst_complete():
+                # TO-DO: Handle completion of the burst
+                pass
+
+    def remove_current_process(self):
+        self.current_process = None
 
 class Processor:
     def __init__(self):
@@ -199,12 +232,15 @@ class Processor:
 
 
 def main():
-    my_os = OS(num_processors=2, num_io_devices=2)
+    my_os = OS(num_processors=4, num_io_devices=2)
 
     processes = [
-        Process(1, [('CPU', 5), ('IO1', 3), ('CPU', 2)], arrival_time=0),
-        Process(2, [('CPU', 3), ('IO2', 4), ('CPU', 4)], arrival_time=2),
-        Process(3, [('CPU', 4), ('IO1', 2), ('CPU', 5)], arrival_time=4)
+        Process(1, [('CPU', 48), ('IO1', 12), ('CPU', 36), ('IO2', 16), ('CPU', 12), ('IO1', 12), ('CPU', 24), ('IO1', 14), ('CPU', 48), ('IO1', 12)], arrival_time=0),
+        Process(2, [('CPU', 60), ('IO1', 10), ('CPU', 60), ('IO1', 18), ('CPU', 36), ('IO1', 14), ('CPU', 12), ('IO2', 20), ('CPU', 12), ('IO1', 16), ('CPU', 48), ('IO1', 20), ('CPU', 36), ('IO1', 20)], arrival_time=2),
+        Process(3, [('CPU', 2), ('IO2', 10), ('CPU', 8), ('IO2', 10), ('CPU', 2), ('IO1', 12), ('CPU', 6), ('IO2', 10), ('CPU', 6), ('IO1', 18), ('CPU', 10), ('IO2', 20)], arrival_time=4),
+        Process(4, [('CPU', 24), ('IO2', 20), ('CPU', 48), ('IO2', 14), ('CPU', 36), ('IO1', 10), ('CPU', 24), ('IO1', 18)], arrival_time=6),
+        Process(5, [('CPU', 48), ('IO2', 20), ('CPU', 24), ('IO1', 12), ('CPU', 36), ('IO1', 20), ('CPU', 24), ('IO1', 14), ('CPU', 36), ('IO1', 20)], arrival_time=8),
+        Process(6, [('CPU', 2), ('IO1', 20), ('CPU', 4), ('IO1', 20), ('CPU', 2), ('IO2', 12), ('CPU', 10), ('IO2', 20), ('CPU', 8), ('IO1', 14)], arrival_time=10)
     ]
 
     for process in processes:
@@ -212,8 +248,15 @@ def main():
 
     my_os.run()
 
+    print("Process Statistics with FCFS Scheduling")
+    print(f"{'PID':<12}{'Arrival':<12}{'Service':<12}{'Start':<12}{'Finish':<12}{'Turnaround ':<12}{'Tr/Ts':<12}")
     for process in my_os.all_processes:
-        print(f"Process {process.pid} completed at time {process.completion_time}")
+        turnaround_time = process.waiting_time + process.service_time
+        tr_ts_ratio = turnaround_time / process.service_time if process.service_time > 0 else 0
+        print(f"{process.pid:<12}{process.arrival_time:<12}{process.service_time:<12}"
+              f"{process.start_time:<12}{process.completion_time:<12}{turnaround_time:<12}{tr_ts_ratio:<12.2f}")
+
+
 
 if __name__ == "__main__":
     main()
